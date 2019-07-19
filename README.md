@@ -1,6 +1,6 @@
 # adl
 
-This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) + ~[z411/trackma](https://github.com/z411/trackma). The goal? Type `adl`, hit enter, choose show, watch show, update episode number with as little input as possible. 
+This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) + ![z411/trackma](https://github.com/z411/trackma). The goal? Type `adl`, hit enter, choose show, watch show, update episode number with as little input as possible. 
 
 ### Requirements:
 
