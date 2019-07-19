@@ -17,3 +17,7 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 ### Usage:
 
 Download the script to `~/bin` or `~/.local/bin` and then simply type `adl` in your terminal.
+
+NOTE: The image may not be up-to-date, but it shows the gist of it.
+
+![](https://user-images.githubusercontent.com/19552720/61544957-169c6f80-aa4f-11e9-8921-2a4c1a4effba.png)
