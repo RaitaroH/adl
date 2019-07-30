@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 1.5
+# version: 1.6
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 tlist=$(trackma list | awk -F'  ' 'NR>1 {split($4,t,".");gsub(" ", "", $5);split($5,n,"/");print t[1]"|"n[1]"|"n[2]}' |\
@@ -16,43 +16,48 @@ tlist=$(trackma list | awk -F'  ' 'NR>1 {split($4,t,".");gsub(" ", "", $5);split
 # finally for real now, output that stuff to a file
 
 # Retrieve title and nr. cat file only once
-entry="$(echo $tlist | fzf --height=10% --tac)"
+entry="$(echo $tlist | fzf --height=15% --tac)"
 title="$(echo $entry | cut -d'|' -f1)"
 nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
   last="$(echo $entry | cut -d'|' -f3)"
 
-echo "Next episode, starting from next to last aired, or all available? Alternatively skip and update entry. [N/l/a/s]"
+color_echo() { echo "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
+color_prompt() { echo "\033[0;36m$@ \033[0m" ;}
+# for better readability $title and $nr will be blue
+# You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+
+color_prompt "Next episode, starting from next to last aired, or all available? Alternatively skip and update entry. [N/l/a/s]"
 read ans
 case $ans in
   ""|"n"|"N")
-    echo "Now watching $title, episode #$nr"
+    color_echo $title "episode" "#$nr"
     anime dl --play vlc $title --episodes $nr 2> /dev/null ;;
   "l"|"L")
-    echo "Now watching $title, starting with episode #$nr"
+    color_echo $title "starting with episode" "#$nr"
     anime dl --play vlc $title --episodes $nr:$last 2> /dev/null ;;
   "a"|"A")
-    echo "Now watching $title, from the start"
+    color_echo $title "starting with episode" "#1"
     anime dl --play vlc $title 2> /dev/null ;;
   "s"|"S")
-    echo "Skipping watching episodes."
-    echo "Enter custom number:"
+    color_prompt "Skipping watching episodes."
+    color_prompt "Enter custom number:"
     read custom
     trackma update $title $custom
     trackma send
     exit 1 ;;
 esac
 
-echo "Increase nr in anime list? Yes, no, or custom number [Y/n/c]"
+color_prompt "If vlc didn't start, the anime wasn't found"
+color_prompt "Increase nr in anime list? Yes, no, or custom number [Y/n/c]"
 read ans
 case $ans in
   ""|"y"|"Y")
     trackma update $title $nr
-    trackma send
-    echo "The progress for $title changed to $nr." ;;
+    trackma send ;;
   "n"|"N")
-    echo "Exiting." ;;
+    color_prompt "Exiting." ;;
   "c"|"C")
-    echo "Enter custom number:"
+    color_prompt "Enter custom number:"
     read custom
     trackma update $title $custom
     trackma send ;;
