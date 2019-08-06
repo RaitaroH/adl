@@ -1,19 +1,17 @@
 #!/bin/bash
-# version: 1.6
+# version: 1.7
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
-tlist=$(trackma list | awk -F'  ' 'NR>1 {split($4,t,".");gsub(" ", "", $5);split($5,n,"/");print t[1]"|"n[1]"|"n[2]}' |\
-  head -n -2 | sed 's/\x1b\[[0-9;]*m//g')
-# awk explination ...
-# delimeter set to 2x space
-# NR>1 ignore first line
-# $4 is the title plus dots ... split allows to remove the dots, sets new result to var t
-# $5 is Current / All episodes split allows to get the current episode number
+tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
+  awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
+# Explination ...
+# sed is removing color formating and everything untill the first letter it finds
+# head is used here to remove the last 2 lines which are also not needed
+# NR>1 ignore first line which is the header
+# $1 is the title plus dots ... split allows to remove the dots, sets new result to var t
+# $2 is Current / All episodes split allows to get the current episode number
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
-# head is used here to remove the last 2 lines which are also not needed
-# that sed at the end is to strip color from the output
-# finally for real now, output that stuff to a file
 
 # Retrieve title and nr. cat file only once
 entry="$(echo $tlist | fzf --height=15% --tac)"
