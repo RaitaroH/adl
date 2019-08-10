@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 1.7
+# version: 1.8
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -13,50 +13,65 @@ tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 
-# Retrieve title and nr. cat file only once
-entry="$(echo $tlist | fzf --height=15% --tac)"
-title="$(echo $entry | cut -d'|' -f1)"
-nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
-  last="$(echo $entry | cut -d'|' -f3)"
-
 watching_prompt() { echo "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_prompt() { echo "\033[0;36m$@ \033[0m" ;}
 # for better readability $title and $nr will be blue
 # You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
 
-color_prompt "Next episode, starting from next to last aired, or all available? Alternatively skip and update entry. [N/l/a/s]"
-read ans
-case $ans in
-  ""|"n"|"N")
-    watching_prompt $title "episode" "#$nr"
-    anime dl --play vlc $title --episodes $nr 2> /dev/null ;;
-  "l"|"L")
-    watching_prompt $title "starting with episode" "#$nr"
-    anime dl --play vlc $title --episodes $nr:$last 2> /dev/null ;;
-  "a"|"A")
-    watching_prompt $title "starting with episode" "#1"
-    anime dl --play vlc $title 2> /dev/null ;;
-  "s"|"S")
-    color_prompt "Skipping watching episodes."
-    color_prompt "Enter custom number:"
-    read custom
-    trackma update $title $custom
-    trackma send
-    exit 1 ;;
-esac
+watch() {
+  # Retrieve title and nr. cat file only once
+  entry="$(echo $tlist | fzf --height=15% --tac -m)"
+  title="$(echo $entry | cut -d'|' -f1)"
+  nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
+  last="$(echo $entry | cut -d'|' -f3)"
 
-color_prompt "If vlc didn't start, the anime wasn't found"
-color_prompt "Increase nr in anime list? Yes, no, or custom number [Y/n/c]"
-read ans
-case $ans in
-  ""|"y"|"Y")
-    trackma update $title $nr
-    trackma send ;;
-  "n"|"N")
-    color_prompt "Exiting." ;;
-  "c"|"C")
-    color_prompt "Enter custom number:"
-    read custom
-    trackma update $title $custom
-    trackma send ;;
-esac
+  color_prompt "Next episode, starting from next to last aired, or all available? Alternatively skip and update entry. [N/l/a/s]"
+  read ans_episode
+  case $ans_episode in
+    ""|"n"|"N")
+      watching_prompt $title "episode" "#$nr"
+      anime dl --play vlc $title --episodes $nr 2> /dev/null ;;
+    "l"|"L")
+      watching_prompt $title "starting with episode" "#$nr"
+      anime dl --play vlc $title --episodes $nr:$last 2> /dev/null ;;
+    "a"|"A")
+      watching_prompt $title "starting with episode" "#1"
+      anime dl --play vlc $title 2> /dev/null ;;
+    "s"|"S")
+      color_prompt "Skipping watching episodes."
+      color_prompt "Enter custom number:"
+      read custom
+      trackma update $title $custom
+      trackma send
+      exit 1 ;;
+  esac
+
+  color_prompt "If vlc didn't start, the anime wasn't found"
+  color_prompt "Increase nr in anime list? Yes, no, or custom number [Y/n/c]"
+  read ans_update
+  case $ans_update in
+    ""|"y"|"Y")
+      trackma update $title $nr
+      trackma send ;;
+    "n"|"N")
+      color_prompt "Exiting." ;;
+    "c"|"C")
+      color_prompt "Enter custom number:"
+      read custom
+      trackma update $title $custom
+      trackma send ;;
+  esac
+} #end of watch()
+
+watch #initial call
+
+while true; do #run as many episodes as possible one after another
+  color_prompt "Want to watch another anime? [Y/n]"
+  read ans_another
+  case $ans_another in
+    ""|"y"|"Y")
+      watch ;;
+    "n"|"N")
+      color_prompt "Exiting" ;;
+  esac
+done
