@@ -19,7 +19,7 @@ title="$(echo $entry | cut -d'|' -f1)"
 nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
   last="$(echo $entry | cut -d'|' -f3)"
 
-color_echo() { echo "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
+watching_prompt() { echo "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_prompt() { echo "\033[0;36m$@ \033[0m" ;}
 # for better readability $title and $nr will be blue
 # You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
@@ -28,13 +28,13 @@ color_prompt "Next episode, starting from next to last aired, or all available? 
 read ans
 case $ans in
   ""|"n"|"N")
-    color_echo $title "episode" "#$nr"
+    watching_prompt $title "episode" "#$nr"
     anime dl --play vlc $title --episodes $nr 2> /dev/null ;;
   "l"|"L")
-    color_echo $title "starting with episode" "#$nr"
+    watching_prompt $title "starting with episode" "#$nr"
     anime dl --play vlc $title --episodes $nr:$last 2> /dev/null ;;
   "a"|"A")
-    color_echo $title "starting with episode" "#1"
+    watching_prompt $title "starting with episode" "#1"
     anime dl --play vlc $title 2> /dev/null ;;
   "s"|"S")
     color_prompt "Skipping watching episodes."
