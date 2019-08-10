@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 1.8
+# version: 1.9
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -25,8 +25,14 @@ watch() {
   nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
   last="$(echo $entry | cut -d'|' -f3)"
 
-  color_prompt "Next episode, starting from next to last aired, or all available? Alternatively skip and update entry. [N/l/a/s]"
-  read ans_episode
+  color_prompt "Enter lowercase or uppercase to issue command:
+    N - next episode (default, press <ENTER>)
+    L - from current to Last known
+    A - All available, from episode 1
+    R - Rewatch current episode only
+    S - Skip the watching. Straight to list update."
+  read -q "ans_episode?Your choice? [N/l/a/r/s] "
+  echo
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt $title "episode" "#$nr"
@@ -46,7 +52,7 @@ watch() {
       exit 1 ;;
   esac
 
-  color_prompt "If vlc didn't start, the anime wasn't found"
+  color_prompt "\nIf vlc didn't start, the anime wasn't found"
   color_prompt "Increase nr in anime list? Yes, no, or custom number [Y/n/c]"
   read ans_update
   case $ans_update in
@@ -72,6 +78,7 @@ while true; do #run as many episodes as possible one after another
     ""|"y"|"Y")
       watch ;;
     "n"|"N")
-      color_prompt "Exiting" ;;
+      color_prompt "Exiting"
+      break ;;
   esac
 done
