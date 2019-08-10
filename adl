@@ -31,7 +31,8 @@ watch() {
     A - All available, from episode 1
     R - Rewatch current episode only
     S - Skip the watching. Straight to list update."
-  read -q "ans_episode?Your choice? [N/l/a/r/s] "
+  printf "\033[0;34mYour choice? [N/l/a/r/s] "
+  read ans_episode
   echo
   case $ans_episode in
     ""|"n"|"N")
@@ -43,6 +44,9 @@ watch() {
     "a"|"A")
       watching_prompt $title "starting with episode" "#1"
       anime dl --play vlc $title 2> /dev/null ;;
+    "r"|"R")
+      watching_prompt $title "episode" "#$(($nr - 1))"
+      anime dl --play vlc $title --episodes $(($nr - 1)) 2> /dev/null ;;
     "s"|"S")
       color_prompt "Skipping watching episodes."
       color_prompt "Enter custom number:"
