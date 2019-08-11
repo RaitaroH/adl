@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 2.0.1
+# version: 2.0.2
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -38,45 +38,59 @@ watch() {
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt $title "episode" "#$nr"
-      anime dl --play vlc $title --episodes $nr 2> /dev/null ;;
+      { out=$(anime dl --play vlc $title --episodes $nr 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "l"|"L")
-      watching_prompt $title "starting with episode" "#$nr"
-      anime dl --play vlc $title --episodes $nr:$last 2> /dev/null ;;
+      if [[ "$last" != "?" ]]; then
+        watching_prompt $title "starting with episode" "#$nr"
+        { out=$(anime dl --play vlc $title --episodes $nr:$last 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      else
+        color_print "The last episode number is unknown."
+        color_prompt "How many episodes after currnet you want to watch? : "
+        read ans_nr
+        [[ $ans_nr != "" ]] && last=$(( $nr + $ans_nr)) || last=$(( $nr + 5))
+        watching_prompt $title "episodes" "#$nr to #$last"
+        { out=$(anime dl --play vlc $title --episodes $nr:$last 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      fi ;;
     "a"|"A")
       watching_prompt $title "starting with episode" "#1"
-      anime dl --play vlc $title 2> /dev/null ;;
+      { out=$(anime dl --play vlc $title 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "r"|"R")
-      watching_prompt $title "episode" "#$(($nr - 1))"
-      anime dl --play vlc $title --episodes $(($nr - 1)) 2> /dev/null ;;
+      nr=$(($nr - 1))
+      watching_prompt $title "episode" "#$nr"
+      { out=$(anime dl --play vlc $title --episodes $nr 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "s"|"S")
       color_print "Skipping watching episodes."
       color_prompt "Enter custom number: "
       read custom
       trackma update $title $custom
       trackma send
-      color_print "Exiting"
+      color_print "Exiting."
       return 0 ;;
     *)
       color_print "Option not available."
       return 0 ;;
-
   esac
 
-  color_print "\nIf vlc didn't start, the anime wasn't found"
-  color_prompt "Increase nr in anime list? Yes, no, or custom number [Y/n/c]: "
+  watched=$(echo $out | grep 'Command Line Interface initialized' | wc -l)
+  [ $watched -eq 0 ] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found." && return 0
+  color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
   read ans_update
   case $ans_update in
     ""|"y"|"Y")
-      trackma update $title $nr
-      trackma send ;;
+      color_print "\nadl counted $watched episodes have been watched."
+      trackma update $title $(( $watched + $nr ))
+      trackma send
+      return 0 ;;
     "n"|"N")
-      color_print "Exiting." ;;
+      color_print "Exiting."
+      return 0 ;;
     "c"|"C")
       color_print "Enter custom number:"
       read custom
       trackma update $title $custom
-      trackma send ;;
-     *)
+      trackma send
+      return 0 ;;
+    *)
       color_print "Option not available."
       return 0 ;;
   esac
