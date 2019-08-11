@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 2.0.2
+# version: 2.0.3
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -72,11 +72,12 @@ watch() {
   esac
 
   watched=$(echo $out | grep 'Command Line Interface initialized' | wc -l)
-  [ $watched -eq 0 ] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found." && return 0
+  [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found. Exiting." && return 0
   color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
   read ans_update
   case $ans_update in
     ""|"y"|"Y")
+      [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
       color_print "\nadl counted $watched episodes have been watched."
       trackma update $title $(( $watched + $nr ))
       trackma send
