@@ -78,7 +78,7 @@ watch() {
   case $ans_update in
     ""|"y"|"Y")
       [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
-      color_print "\nadl counted $watched episodes have been watched."
+      color_print "\nadl counted $watched episodes that have been watched."
       trackma update $title $(( $watched + $nr ))
       trackma send
       return 0 ;;
