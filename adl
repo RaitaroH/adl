@@ -108,7 +108,7 @@ while true; do #run as many episodes as possible one after another
     ""|"y"|"Y")
       watch ;;
     "n"|"N")
-      color_print "Exiting"
+      color_print "Exiting."
       break ;;
   esac
 done
