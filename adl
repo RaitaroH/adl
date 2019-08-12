@@ -1,5 +1,5 @@
-#!/bin/bash
-# version: 2.0.4
+#!/bin/zsh
+# version: 2.0.5
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
