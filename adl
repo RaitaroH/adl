@@ -1,5 +1,5 @@
 #!/bin/zsh
-# version: 2.0.5
+# version: 2.0.6
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -81,7 +81,7 @@ watch() {
     ""|"y"|"Y")
       [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
       color_print "\nadl counted $watched episodes that have been watched."
-      trackma update $title $(( $watched + $nr ))
+      [[ $nr != $last ]] && trackma update $title $(( $watched + $nr )) || trackma update $title $nr
       trackma send
       return 0 ;;
     "n"|"N")
