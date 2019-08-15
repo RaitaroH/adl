@@ -4,7 +4,7 @@
 
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
   # awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
-tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 | tail -n +2)
+tlist=$(trackma list | head -n -2 | tail -n +2)
 # Explination ...
 # sed is removing color formating and everything untill the first letter it finds
 # head is used here to remove the last 2 lines which are also not needed
@@ -22,8 +22,9 @@ color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 
 watch() {
   # Retrieve title and nr. cat file only once
-  entry="$(echo "$tlist" | fzf --height=15% --tac -m)"
-  entry="$(echo "$entry" | awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+  entry="$(echo "$tlist" | fzf --ansi --height=15% --tac -m)"
+  entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+    awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
   title="$(echo "$entry" | cut -d'|' -f1)"
   nr="$(($(echo "$entry" | cut -d'|' -f2) + 1))" #dat spacing tho
    last="$(echo "$entry" | cut -d'|' -f3)"
