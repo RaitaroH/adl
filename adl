@@ -26,7 +26,8 @@ watch() {
   entry="$(echo $entry | awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')"
   title="$(echo $entry | cut -d'|' -f1)"
   nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
-  last="$(echo $entry | cut -d'|' -f3)"
+   last="$(echo $entry | cut -d'|' -f3)"
+  score="$(echo "$entry" | cut -d'|' -f4)"
 
   color_print "Enter lowercase or uppercase to issue command:
     N - next episode (default, press <ENTER>)
@@ -82,7 +83,13 @@ watch() {
     ""|"y"|"Y")
       [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
       color_print "\nadl counted $watched episodes that have been watched."
-      [[ $watched -gt 1 ]] && trackma update $title $(( $watched + $nr )) || trackma update $title $nr
+      [[ $watched -gt 1 ]] && nr=$(( $watched + $nr ))
+      trackma update "$title" "$nr"
+      if [[ $score == 0 ]] && [[ $nr == $last ]] ; then
+        color_prompt "Anime will be set to completed. Also rate the anime? Type score: "
+        read ans_score
+        [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
+      fi
       trackma send
       return 0 ;;
     "n"|"N")
