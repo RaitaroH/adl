@@ -14,7 +14,7 @@ tlist=$(trackma list | head -n -2 | tail -n +2)
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 
-watching_prompt() { echo -e "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
+watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_print() { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 # for better readability $title and $nr will be blue
@@ -31,10 +31,11 @@ watch() {
   score="$(echo "$entry" | cut -d'|' -f4)"
 
   color_print "Enter lowercase or uppercase to issue command:
-    N - next episode (default, press <ENTER>)
+    N - Next episode (default, press <ENTER>)
     L - from current to Last known
     A - All available, from episode 1
     R - Rewatch current episode only
+    C - Custom episode
     S - Skip the watching. Straight to list update."
   color_prompt "Your choice? [N/l/a/r/s]: "
   read ans_episode
@@ -61,6 +62,11 @@ watch() {
     "r"|"R")
       nr=$(($nr - 1))
       watching_prompt "$title" "episode" "#$nr"
+      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+    "c"|"C")
+      color_prompt "Enter custom number: "
+      read nr
+      watching_prompt "$title" "$nr"
       { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "s"|"S")
       color_print "Skipping watching episodes."
