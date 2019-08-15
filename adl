@@ -75,7 +75,7 @@ watch() {
       return 0 ;;
   esac
 
-  watched=$(echo $out | grep 'Command Line Interface initialized' | wc -l)
+  watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l)
   [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found. Exiting." && return 0
   [[ $ans_episode == "r" ]] || [[ $ans_episode == "R" ]] && color_print "\nNo need to update list. Exiting." && return 0
   color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
@@ -85,9 +85,9 @@ watch() {
       [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
       color_print "\nadl counted $watched episodes that have been watched."
       [[ $watched -gt 1 ]] && nr=$(( $watched + $nr ))
-      trackma update "$title" "$nr"
-      if [[ $score == 0 ]] && [[ $nr == $last ]] ; then
-        color_prompt "Anime will be set to completed. Also rate the anime? Type score: "
+      [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
+      if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
+        color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
         read ans_score
         [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
       fi
@@ -111,7 +111,7 @@ watch() {
 watch #initial call
 
 while true; do #run as many episodes as possible one after another
-  color_prompt "Want to watch another anime? [Y/n]: "
+  color_prompt "\nWant to watch another anime? [Y/n]: "
   read ans_another
   case $ans_another in
     ""|"y"|"Y")
