@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 # version: 2.0.6
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
@@ -14,19 +14,19 @@ tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 
-watching_prompt() { echo "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
-color_print() { echo "\033[0;36m$@ \033[0m" ;} #for normal output
+watching_prompt() { echo -e "Now watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
+color_print() { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 # for better readability $title and $nr will be blue
 # You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
 
 watch() {
   # Retrieve title and nr. cat file only once
-  entry="$(echo $tlist | fzf --height=15% --tac -m)"
-  entry="$(echo $entry | awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')"
-  title="$(echo $entry | cut -d'|' -f1)"
-  nr="$(($(echo $entry | cut -d'|' -f2) + 1))" #dat spacing tho
-   last="$(echo $entry | cut -d'|' -f3)"
+  entry="$(echo "$tlist" | fzf --height=15% --tac -m)"
+  entry="$(echo "$entry" | awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+  title="$(echo "$entry" | cut -d'|' -f1)"
+  nr="$(($(echo "$entry" | cut -d'|' -f2) + 1))" #dat spacing tho
+   last="$(echo "$entry" | cut -d'|' -f3)"
   score="$(echo "$entry" | cut -d'|' -f4)"
 
   color_print "Enter lowercase or uppercase to issue command:
@@ -40,32 +40,32 @@ watch() {
   echo
   case $ans_episode in
     ""|"n"|"N")
-      watching_prompt $title "episode" "#$nr"
-      { out=$(anime dl --play vlc $title --episodes $nr 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      watching_prompt "$title" "episode" "#$nr"
+      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "l"|"L")
       if [[ "$last" != "?" ]]; then
-        watching_prompt $title "starting with episode" "#$nr"
-        { out=$(anime dl --play vlc $title --episodes $nr:$last 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        watching_prompt "$title" "starting with episode" "#$nr"
+        { out=$(anime dl --play vlc "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
       else
         color_print "The last episode number is unknown."
         color_prompt "How many episodes after currnet you want to watch? : "
         read ans_nr
         [[ $ans_nr != "" ]] && last=$(( $nr + $ans_nr)) || last=$(( $nr + 5))
-        watching_prompt $title "episodes" "#$nr to #$last"
-        { out=$(anime dl --play vlc $title --episodes $nr:$last 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        watching_prompt "$title" "episodes" "#$nr to #$last"
+        { out=$(anime dl --play vlc "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
       fi ;;
     "a"|"A")
-      watching_prompt $title "starting with episode" "#1"
-      { out=$(anime dl --play vlc $title 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      watching_prompt "$title" "starting with episode" "#1"
+      { out=$(anime dl --play vlc "$title" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "r"|"R")
       nr=$(($nr - 1))
-      watching_prompt $title "episode" "#$nr"
-      { out=$(anime dl --play vlc $title --episodes $nr 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      watching_prompt "$title" "episode" "#$nr"
+      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "s"|"S")
       color_print "Skipping watching episodes."
       color_prompt "Enter custom number: "
       read custom
-      trackma update $title $custom
+      trackma update "$title" "$custom"
       trackma send
       color_print "Exiting."
       return 0 ;;
@@ -98,7 +98,7 @@ watch() {
     "c"|"C")
       color_print "Enter custom number:"
       read custom
-      trackma update $title $custom
+      trackma update "$title" "$custom"
       trackma send
       return 0 ;;
     *)
