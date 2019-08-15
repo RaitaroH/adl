@@ -66,7 +66,7 @@ watch() {
     "c"|"C")
       color_prompt "Enter custom number: "
       read nr
-      watching_prompt "$title" "$nr"
+      watching_prompt "$title" "episode" "#$nr"
       { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "s"|"S")
       color_print "Skipping watching episodes."
