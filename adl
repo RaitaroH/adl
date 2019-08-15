@@ -37,7 +37,7 @@ watch() {
     R - Rewatch current episode only
     C - Custom episode
     S - Skip the watching. Straight to list update."
-  color_prompt "Your choice? [N/l/a/r/s]: "
+  color_prompt "Your choice? [N/l/a/r/c/s]: "
   read ans_episode
   echo
   case $ans_episode in
@@ -74,7 +74,6 @@ watch() {
       read custom
       trackma update "$title" "$custom"
       trackma send
-      color_print "Exiting."
       return 0 ;;
     *)
       color_print "Option not available."
@@ -82,13 +81,12 @@ watch() {
   esac
 
   watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l)
-  [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found. Exiting." && return 0
-  [[ $ans_episode == "r" ]] || [[ $ans_episode == "R" ]] && color_print "\nNo need to update list. Exiting." && return 0
+  [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
   color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
   read ans_update
   case $ans_update in
     ""|"y"|"Y")
-      [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update. Exiting." && return 0 #exit if option r/R was used before
+      [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
       color_print "\nadl counted $watched episodes that have been watched."
       [[ $watched -gt 1 ]] && nr=$(( $watched + $nr ))
       [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
@@ -100,7 +98,7 @@ watch() {
       trackma send
       return 0 ;;
     "n"|"N")
-      color_print "Exiting."
+      color_print "Skipping..."
       return 0 ;;
     "c"|"C")
       color_print "Enter custom number:"
