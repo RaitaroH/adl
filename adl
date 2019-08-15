@@ -75,6 +75,7 @@ watch() {
 
   watched=$(echo $out | grep 'Command Line Interface initialized' | wc -l)
   [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found. Exiting." && return 0
+  [[ $ans_episode == "r" ]] || [[ $ans_episode == "R" ]] && color_print "\nNo need to update list. Exiting." && return 0
   color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
   read ans_update
   case $ans_update in
