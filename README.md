@@ -16,9 +16,11 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 
 ### Requirements
 
-+ anime-donwloader;
-+ trackma - tested with Anilist;
-+ fzf.
+
++ ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. Changing the provider is a good idea, I use `animepahe`.
++ ![z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl);
++ ![junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection;
++ ![VLC](https://www.videolan.org/vlc/) - used to play the anime.
 
 ### Installation
 
