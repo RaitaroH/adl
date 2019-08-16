@@ -39,7 +39,6 @@ watch() {
     S - Skip the watching. Straight to list update."
   color_prompt "Your choice? [N/l/a/r/c/s]: "
   read ans_episode
-  echo
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt "$title" "episode" "#$nr"
@@ -116,6 +115,7 @@ watch #initial call
 while true; do #run as many episodes as possible one after another
   color_prompt "\nWant to watch another anime? [Y/n]: "
   read ans_another
+  echo
   case $ans_another in
     ""|"y"|"Y")
       watch ;;
