@@ -2,11 +2,7 @@
 
 This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) + ![z411/trackma](https://github.com/z411/trackma). The goal? Type `adl`, hit enter, choose show, watch show, update episode number with as little input as possible.
 
-### Requirements
-
-+ anime-donwloader;
-+ trackma - tested with Anilist;
-+ fzf.
+![](./images/terminal.svg)
 
 ### Features
 
@@ -18,6 +14,12 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
+### Requirements
+
++ anime-donwloader;
++ trackma - tested with Anilist;
++ fzf.
+
 ### Installation
 
 Simply download the script in your `~/bin` folder and make it executable.
@@ -27,7 +29,3 @@ mkdir -p "$HOME/bin"
 wget https://raw.githubusercontent.com/RaitaroH/adl/master/adl -O "$HOME/bin/adl"
 chmod +x "$HOME/bin/adl"
 ```
-
-### Usage
-
-![](./images/terminal.svg)
