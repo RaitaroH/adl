@@ -22,7 +22,7 @@ color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 
 watch() {
   # Retrieve title and nr. cat file only once
-  entry="$(echo "$tlist" | fzf --ansi --height=15% --tac -m)"
+  entry="$(echo "$tlist" | fzf --ansi --reverse)"
   entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
     awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
   title="$(echo "$entry" | cut -d'|' -f1)"
@@ -110,6 +110,7 @@ watch() {
   esac
 } #end of watch()
 
+clear #clear the screen
 watch #initial call
 
 while true; do #run as many episodes as possible one after another
