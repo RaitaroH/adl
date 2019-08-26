@@ -1,5 +1,5 @@
 #!/bin/bash
-# version: 2.1.3
+# version: 2.1.4
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
@@ -21,10 +21,14 @@ color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 # You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
 
 watch() {
-  # Retrieve title and nr. cat file only once
-  entry="$(echo "$tlist" | fzf --ansi --reverse)"
-  entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
-    awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+  # Retrieve title and nr. Parse file only once
+  if [[ -z "$1" ]]; then
+    entry="$(echo "$tlist" | fzf --ansi --reverse)"
+    entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+      awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+  else
+    entry="$1" #retrieved custom show from adl input
+  fi
   title="$(echo "$entry" | cut -d'|' -f1)"
   nr="$(($(echo "$entry" | cut -d'|' -f2) + 1))" #dat spacing tho
    last="$(echo "$entry" | cut -d'|' -f3)"
@@ -81,37 +85,71 @@ watch() {
 
   watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l)
   [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
-  color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
-  read ans_update
-  case $ans_update in
-    ""|"y"|"Y")
-      [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
-      [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$(( $watched + $nr ))
-      [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
-      if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
-        color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
-        read ans_score
-        [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
-      fi
-      trackma send
-      return 0 ;;
-    "n"|"N")
-      color_print "Skipping..."
-      return 0 ;;
-    "c"|"C")
-      color_print "Enter custom number:"
-      read custom
-      trackma update "$title" "$custom"
-      trackma send
-      return 0 ;;
-    *)
-      color_print "Option not available."
-      return 0 ;;
-  esac
+	if [[ -z "$1" ]]; then #only ask if anime is in list
+    color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
+    read ans_update
+    case $ans_update in
+      ""|"y"|"Y")
+        [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
+        [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$(( $watched + $nr ))
+        if [[ -z "$1" ]]; then
+          echo 'bla'
+          echo $nr $last $title
+          [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
+        fi
+        if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
+          color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
+          read ans_score
+          [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
+        fi
+        trackma send
+        return 0 ;;
+      "n"|"N")
+        color_print "Skipping..."
+        return 0 ;;
+      "c"|"C")
+        color_print "Enter custom number:"
+        read custom
+        trackma update "$title" "$custom"
+        trackma send
+        return 0 ;;
+      *)
+        color_print "Option not available."
+        return 0 ;;
+    esac
+  fi
 } #end of watch()
 
 clear #clear the screen
-watch #initial call
+
+if [[ ! -z $1 ]]; then #test for user input
+  if echo $tlist | grep -q "$1" ;then
+    color_print "Anime found in list. Proceeding.\n"
+    watch "$1|0|12|0"
+  else
+    color_prompt "Anime not found in list. Want to add it? [y/N]: "
+    read ans_add
+    echo
+    case $ans_add in
+      "y"|"Y")
+        trackma add "$1"
+        trackma send
+        color_print "\nRetrieving updated anime list..."
+        tlist=$(trackma list | head -n -2 | tail -n +2)
+        watch ;; #anime is in list
+      ""|"n"|"N")
+        if [[ ! -z $2 ]]; then
+          watch "$1|$2|12|0" #episode nr was specified
+        else
+          color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl 'TITLE' 'EPISODE'\""
+          color_print "Episode nr can still be specified later using 'Custom' option.\n"
+          watch "$1|$2|12|0" #episode nr was specified
+        fi ;;
+    esac
+  fi
+else
+  watch
+fi
 
 while true; do #run as many episodes as possible one after another
   color_prompt "\nWant to watch another anime? [Y/n]: "
