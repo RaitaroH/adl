@@ -1,6 +1,12 @@
 #!/bin/bash
-# version: 2.1.4
+# version: 2.1.5
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+
+# Exit if vlc is not installed
+if ! [ -x "$(command -v vlc)" ]; then
+  echo 'Error: VLC is not installed.' >&2
+  exit 1
+fi
 
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
   # awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
