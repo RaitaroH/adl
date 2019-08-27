@@ -2,9 +2,10 @@
 # version: 2.1.5
 # Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
-# Exit if vlc is not installed
-if ! [ -x "$(command -v vlc)" ]; then
-  echo 'Error: VLC is not installed.' >&2
+# Exit if "$player" is not installed
+player="vlc"
+if ! [ -x "$(command -v $player)" ]; then
+  echo "Error: $player is not installed. This variable can be set in the script." >&2
   exit 1
 fi
 
@@ -52,31 +53,31 @@ watch() {
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "l"|"L")
       if [[ "$last" != "?" ]]; then
         watching_prompt "$title" "starting with episode" "#$nr"
-        { out=$(anime dl --play vlc "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl --play "$player" "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
       else
         color_print "The last episode number is unknown."
         color_prompt "How many episodes after currnet you want to watch? : "
         read ans_nr
         [[ $ans_nr != "" ]] && last=$(( $nr + $ans_nr)) || last=$(( $nr + 5))
         watching_prompt "$title" "episodes" "#$nr to #$last"
-        { out=$(anime dl --play vlc "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl --play "$player" "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
       fi ;;
     "a"|"A")
       watching_prompt "$title" "starting with episode" "#1"
-      { out=$(anime dl --play vlc "$title" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      { out=$(anime dl --play "$player" "$title" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "r"|"R")
       nr=$(($nr - 1))
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "c"|"C")
       color_prompt "Enter custom number: "
       read nr
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play vlc "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
     "s"|"S")
       color_print "Skipping watching episodes."
       color_prompt "Enter custom number: "
@@ -89,8 +90,17 @@ watch() {
       return 0 ;;
   esac
 
-  watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l)
-  [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
+  # Initialize watched counter
+  case $player in
+    "vlc")
+      watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l) ;;
+    "mpv")
+      watched=$(echo "$out" | grep 'Playing: ' | wc -l) ;;
+    *)
+      watched=1 ;;
+  esac
+  [[ $watched == 0 ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
+
   if [[ -z "$1" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     read ans_update
