@@ -98,7 +98,11 @@ watch() {
       ""|"y"|"Y")
         [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
         [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$(( $watched + $nr - 1 ))
-        [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
+        if [[ $last == "?" ]]; then
+           trackma update "$title" "$nr"
+        else
+          [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
+        fi
         if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
           color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
           read ans_score
