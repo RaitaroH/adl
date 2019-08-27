@@ -91,7 +91,7 @@ watch() {
 
   watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l)
   [[ $watched == 0 ]] && color_print "\nVLC didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
-	if [[ -z "$1" ]]; then #only ask if anime is in list
+  if [[ -z "$1" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     read ans_update
     case $ans_update in
