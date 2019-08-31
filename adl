@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.0
+## Version: 2.2.1
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -95,6 +95,8 @@ watch() { #{{{
       read custom
       trackma update "$title" "$custom"
       trackma send
+      color_print "\nRetrieving updated anime list..."
+      get_list
       return 0 ;;
     *)
       color_print "Option not available."
@@ -130,6 +132,8 @@ watch() { #{{{
           [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
         fi
         trackma send
+        color_print "\nRetrieving updated anime list..."
+        get_list
         return 0 ;;
       "n"|"N")
         color_print "Skipping..."
@@ -139,6 +143,8 @@ watch() { #{{{
         read custom
         trackma update "$title" "$custom"
         trackma send
+        color_print "\nRetrieving updated anime list..."
+        get_list
         return 0 ;;
       *)
         color_print "Option not available."
