@@ -1,16 +1,30 @@
 #!/bin/bash
 
-## Version: 2.1.6
+## Version: 2.2.0
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+## Usage: $ adl [Option...] [Command]...
+## Options:
+##   -p, --player      Define player. Ex: $adl -p mpv
+##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018" "70"
+##   -h, --help        Display help.
+##   -v, --version     Display version.
 
-# Exit if "$player" is not installed
 player="vlc"
-if ! [ -x "$(command -v $player)" ]; then
-  echo "Error: $player is not installed. This variable can be set in the script." >&2
-  exit 1
-fi
-
-tlist=$(trackma list | head -n -2 | tail -n +2)
+check_player() { #{{{
+  # Exit if "$player" is not installed
+  if ! [ -x "$(command -v $player)" ]; then
+    [[ -z $player ]] && echo "No argument provided." || echo "Error: $player is not installed." >&2
+    print_help
+    exit 1
+  fi
+  clear
+} #}}}
+watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
+color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
+color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
+print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
+print_version()   { print_help | head -2 ;}
+get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
 # {{{
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
   # awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
@@ -23,10 +37,6 @@ tlist=$(trackma list | head -n -2 | tail -n +2)
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 # }}}
-
-watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
-color_print() { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
-color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
 
 watch() { #{{{
   # Retrieve title and nr. Parse file only once
@@ -137,9 +147,7 @@ watch() { #{{{
   fi
 } #end of watch() }}}
 
-clear #clear the screen
-
-if [[ ! -z $1 ]]; then #test for user input
+show_function() { #{{{
   if echo $tlist | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
     watch "$1|0|12|0"
@@ -152,7 +160,7 @@ if [[ ! -z $1 ]]; then #test for user input
         trackma add "$1"
         trackma send
         color_print "\nRetrieving updated anime list..."
-        tlist=$(trackma list | head -n -2 | tail -n +2)
+        get_list
         watch ;; #anime is in list
       ""|"n"|"N")
         if [[ ! -z $2 ]]; then
@@ -164,19 +172,44 @@ if [[ ! -z $1 ]]; then #test for user input
         fi ;;
     esac
   fi
-else
-  watch
-fi
+} #}}}
 
-while true; do #run as many episodes as possible one after another
-  color_prompt "\nWant to watch another anime? [Y/n]: "
-  read ans_another
-  echo
-  case $ans_another in
-    ""|"y"|"Y")
-      watch ;;
-    "n"|"N")
-      color_print "Exiting.\n"
-      break ;;
+watch_another() { #{{{
+  while true; do #run as many episodes as possible one after another
+    color_prompt "\nWant to watch another anime? [Y/n]: "
+    read ans_another
+    echo
+    case $ans_another in
+      ""|"y"|"Y")
+        watch ;;
+      "n"|"N")
+        color_print "Exiting.\n"
+        exit 0 ;;
+    esac
+  done
+} #}}}
+
+while [ $# -ge 1 ]; do
+  opt="$1"
+  shift #next argument
+  case "$opt" in
+    -v|--version) print_version ; exit 0 ;;
+    -h|--help)    print_help ; exit 0 ;;
+    -p|--player)  player="$1" ;;
+    -s|--show)
+      if [[ -z $1 ]]; then
+        echo "This options requires an argument!"
+        print_help | tail -6
+        exit 0
+      else
+       show_title="$1"
+       show_episode="$2"
+     fi ;;
   esac
+  shift
 done
+
+check_player
+get_list
+[[ -z "$show_title" ]] && watch || show_function "$show_title" "$show_episode"
+watch_another
