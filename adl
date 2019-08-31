@@ -1,6 +1,7 @@
 #!/bin/bash
-# version: 2.1.6
-# Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+
+## Version: 2.1.6
+## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 
 # Exit if "$player" is not installed
 player="vlc"
@@ -9,9 +10,10 @@ if ! [ -x "$(command -v $player)" ]; then
   exit 1
 fi
 
+tlist=$(trackma list | head -n -2 | tail -n +2)
+# {{{
 # tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
   # awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
-tlist=$(trackma list | head -n -2 | tail -n +2)
 # Explination ...
 # sed is removing color formating and everything untill the first letter it finds
 # head is used here to remove the last 2 lines which are also not needed
@@ -20,14 +22,13 @@ tlist=$(trackma list | head -n -2 | tail -n +2)
 # $2 is Current / All episodes split allows to get the current episode number
 # gsub thingy is to remove beggining space " 2" from one digit numbers
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
+# }}}
 
 watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_print() { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt() { printf "\033[0;34m$@\033[0m" ;} #for user input
-# for better readability $title and $nr will be blue
-# You can find other colors here: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
 
-watch() {
+watch() { #{{{
   # Retrieve title and nr. Parse file only once
   if [[ -z "$1" ]]; then
     entry="$(echo "$tlist" | fzf --ansi --reverse)"
@@ -134,7 +135,7 @@ watch() {
         return 0 ;;
     esac
   fi
-} #end of watch()
+} #end of watch() }}}
 
 clear #clear the screen
 
