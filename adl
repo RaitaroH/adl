@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.1
+## Version: 2.2.2
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -38,19 +38,33 @@ get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 # }}}
 
-watch() { #{{{
+select_function() { #{{{
   # Retrieve title and nr. Parse file only once
   if [[ -z "$1" ]]; then
-    entry="$(echo "$tlist" | fzf --ansi --reverse)"
+    entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
     entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
       awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+    present=""
   else
     entry="$1" #retrieved custom show from adl input
+    present="0"
   fi
-  title="$(echo "$entry" | cut -d'|' -f1)"
-  nr="$(($(echo "$entry" | cut -d'|' -f2) + 1))" #dat spacing tho
-   last="$(echo "$entry" | cut -d'|' -f3)"
-  score="$(echo "$entry" | cut -d'|' -f4)"
+
+  readarray -t lines <<< "$(echo "$entry")"
+  for line in "${lines[@]}"; do
+    watch "$line" "$present"
+    echo
+  done
+
+} #}}}
+
+watch() { #{{{
+  title="$(echo "$1" | cut -d'|' -f1)"
+  nr="$(($(echo "$1" | cut -d'|' -f2) + 1))" #dat spacing tho
+   last="$(echo "$1" | cut -d'|' -f3)"
+  score="$(echo "$1" | cut -d'|' -f4)"
+
+  echo "$title > $(($nr-1)) / $last"
 
   color_print "Enter lowercase or uppercase to issue command:
     N - Next episode (default, press <ENTER>)
@@ -95,8 +109,6 @@ watch() { #{{{
       read custom
       trackma update "$title" "$custom"
       trackma send
-      color_print "\nRetrieving updated anime list..."
-      get_list
       return 0 ;;
     *)
       color_print "Option not available."
@@ -114,7 +126,7 @@ watch() { #{{{
   esac
   [[ $watched == 0 ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
 
-  if [[ -z "$1" ]]; then #only ask if anime is in list
+  if [[ -z "$2" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     read ans_update
     case $ans_update in
@@ -132,8 +144,6 @@ watch() { #{{{
           [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
         fi
         trackma send
-        color_print "\nRetrieving updated anime list..."
-        get_list
         return 0 ;;
       "n"|"N")
         color_print "Skipping..."
@@ -143,8 +153,6 @@ watch() { #{{{
         read custom
         trackma update "$title" "$custom"
         trackma send
-        color_print "\nRetrieving updated anime list..."
-        get_list
         return 0 ;;
       *)
         color_print "Option not available."
@@ -156,7 +164,8 @@ watch() { #{{{
 show_function() { #{{{
   if echo $tlist | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
-    watch "$1|0|12|0"
+    select_function "$(echo "$tlist" | grep "$1" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+        awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
     read ans_add
@@ -165,16 +174,16 @@ show_function() { #{{{
       "y"|"Y")
         trackma add "$1"
         trackma send
-        color_print "\nRetrieving updated anime list..."
+        color_print "\nRetrieving updated anime list...\n"
         get_list
-        watch ;; #anime is in list
+        select_function ;; #anime is in list
       ""|"n"|"N")
         if [[ ! -z $2 ]]; then
-          watch "$1|$2|12|0" #episode nr was specified
+          select_function "$1|$2|12|0" #episode nr was specified
         else
           color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl 'TITLE' 'EPISODE'\""
           color_print "Episode nr can still be specified later using 'Custom' option.\n"
-          watch "$1|$2|12|0" #episode nr was specified
+          select_function "$1|$2|12|0" #episode nr was specified
         fi ;;
     esac
   fi
@@ -187,7 +196,9 @@ watch_another() { #{{{
     echo
     case $ans_another in
       ""|"y"|"Y")
-        watch ;;
+        color_print "\nRetrieving updated anime list...\n"
+        get_list
+        select_function ;;
       "n"|"N")
         color_print "Exiting.\n"
         exit 0 ;;
@@ -217,5 +228,5 @@ done
 
 check_player
 get_list
-[[ -z "$show_title" ]] && watch || show_function "$show_title" "$show_episode"
+[[ -z "$show_title" ]] && select_function || show_function "$show_title" "$show_episode"
 watch_another
