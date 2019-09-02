@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.3
+## Version: 2.2.4
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -26,15 +26,13 @@ print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_version()   { print_help | head -2 ;}
 get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
 # {{{
-# tlist=$(trackma list | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' | head -n -2 |\
-  # awk -F'  ' 'NR>1 {split($1,t,"."); gsub(" ", "", $2)split($2,n,"/"); print t[1]"|"n[1]"|"n[2]}')
-# Explination ...
+# Entry manipulation explination ...
 # sed is removing color formating and everything untill the first letter it finds
-# head is used here to remove the last 2 lines which are also not needed
 # NR>1 ignore first line which is the header
 # $1 is the title plus dots ... split allows to remove the dots, sets new result to var t
 # $2 is Current / All episodes split allows to get the current episode number
 # gsub thingy is to remove beggining space " 2" from one digit numbers
+# $1=$2="" clears these two and prints $0 which prints $3, $4... Needed for x.x scores
 # finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
 # }}}
 
@@ -43,7 +41,7 @@ select_function() { #{{{
   if [[ -z "$1" ]]; then
     entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
     entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
-      awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+      awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}')"
     present=""
   else
     entry="$1" #retrieved custom show from adl input
@@ -170,7 +168,7 @@ show_function() { #{{{
   if echo $tlist | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
     select_function "$(echo "$tlist" | grep "$1" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
-        awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); gsub(" ", "", $4); print t[1]"|"n[1]"|"n[2]"|"$4}')"
+        awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}')"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
     read ans_add
