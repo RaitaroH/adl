@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.4
+## Version: 2.2.5
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -25,6 +25,10 @@ color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
 print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_version()   { print_help | head -2 ;}
 get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
+process_list()    {
+  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+  awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
+}
 # {{{
 # Entry manipulation explination ...
 # sed is removing color formating and everything untill the first letter it finds
@@ -40,8 +44,7 @@ select_function() { #{{{
   # Retrieve title and nr. Parse file only once
   if [[ -z "$1" ]]; then
     entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
-    entry="$(echo "$entry" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
-      awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}')"
+    entry="$(echo "$entry" | process_list)"
     present=""
   else
     entry="$1" #retrieved custom show from adl input
@@ -167,8 +170,7 @@ watch() { #{{{
 show_function() { #{{{
   if echo $tlist | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
-    select_function "$(echo "$tlist" | grep "$1" | sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
-        awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}')"
+    select_function "$(echo "$tlist" | grep "$1" | process_list)"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
     read ans_add
