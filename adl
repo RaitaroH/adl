@@ -1,14 +1,16 @@
 #!/bin/bash
 
-## Version: 2.2.5
+## Version: 2.2.6
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
 ##   -p, --player      Define player. Ex: $adl -p mpv
 ##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018" "70"
+##   -y, --no-confirm  Assume default option for all promts. In combination with `-p mpv` player starts automatically
 ##   -h, --help        Display help.
 ##   -v, --version     Display version.
 
+yes=""
 player="vlc"
 check_player() { #{{{
   # Exit if "$player" is not installed
@@ -24,6 +26,7 @@ color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
 print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_version()   { print_help | head -2 ;}
+print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
 process_list()    {
   sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
@@ -59,6 +62,36 @@ select_function() { #{{{
 
 } #}}}
 
+animedl() { #{{{
+if [[ "$player" != "mpv" ]] || [[ -z "$yes" ]]; then
+  if [[ "$4" != "" ]]; then
+    { out=$(anime dl --play "$1" "$2" --episodes "$3":"$4" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+    return 1
+  else
+    if [[ "$3" != "" ]]; then
+      { out=$(anime dl --play "$1" "$2" --episodes "$3" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      return 1
+    else
+      { out=$(anime dl --play "$1" "$2" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      return 1
+    fi
+  fi
+else #Explination: piping into "anime dl" works to select 1 without input... but vlc crashes; thus this convoluted mess is needed
+  if [[ "$4" != "" ]]; then
+    { out=$(echo "$yes" | anime dl --play "$1" "$2" --episodes "$3":"$4" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+    return 1
+  else
+    if [[ "$3" != "" ]]; then
+      { out=$(echo "$yes" | anime dl --play "$1" "$2" --episodes "$3" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      return 1
+    else
+      { out=$(echo "$yes" | anime dl --play "$1" "$2" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      return 1
+    fi
+  fi
+fi
+} #}}}
+
 watch() { #{{{
   title="$(echo "$1" | cut -d'|' -f1)"
   nr="$(($(echo "$1" | cut -d'|' -f2) + 1))" #dat spacing tho
@@ -76,35 +109,39 @@ watch() { #{{{
     C - Custom episode
     S - Skip the watching. Straight to list update."
   color_prompt "Your choice? [N/l/a/r/c/s]: "
-  read ans_episode
+  if [[ -z "$yes" ]]; then read ans_episode
+  else ans_episode="" ; print_noconfirm
+  fi
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      animedl "$player" "$title" "$nr" ;;
     "l"|"L")
       if [[ "$last" != "?" ]]; then
         watching_prompt "$title" "starting with episode" "#$nr"
-        { out=$(anime dl --play "$player" "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        animedl "$player" "$title" "$nr" "$last"
       else
         color_print "The last episode number is unknown."
         color_prompt "How many episodes after currnet you want to watch? : "
-        read ans_nr
+        if [[ -z "$yes" ]]; then read ans_nr
+        else ans_nr="" ; print_noconfirm
+        fi
         [[ $ans_nr != "" ]] && last=$(( $nr + $ans_nr)) || last=$(( $nr + 5))
         watching_prompt "$title" "episodes" "#$nr to #$last"
-        { out=$(anime dl --play "$player" "$title" --episodes "$nr":"$last" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+        animedl "$player" "$title" "$nr" "$last"
       fi ;;
     "a"|"A")
       watching_prompt "$title" "starting with episode" "#1"
-      { out=$(anime dl --play "$player" "$title" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      animedl "$player" "$title" ;;
     "r"|"R")
       nr=$(($nr - 1))
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      animedl "$player" "$title" "$nr" ;;
     "c"|"C")
       color_prompt "Enter custom number: "
       read nr
       watching_prompt "$title" "episode" "#$nr"
-      { out=$(anime dl --play "$player" "$title" --episodes "$nr" 2> /dev/null | tee >(cat - >&5)); } 5>&1 ;;
+      animedl "$player" "$title" "$nr" ;;
     "s"|"S")
       color_print "Skipping watching episodes."
       color_prompt "Enter custom number: "
@@ -131,7 +168,9 @@ watch() { #{{{
 
   if [[ -z "$2" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
-    read ans_update
+    if [[ -z "$yes" ]]; then read ans_update
+    else ans_update="" ; print_noconfirm
+    fi
     case $ans_update in
       ""|"y"|"Y")
         [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
@@ -173,7 +212,9 @@ show_function() { #{{{
     select_function "$(echo "$tlist" | grep "$1" | process_list)"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
-    read ans_add
+    if [[ -z "$yes" ]]; then read ans_add
+    else ans_add="" ; print_noconfirm
+    fi
     echo
     case $ans_add in
       "y"|"Y")
@@ -196,14 +237,16 @@ show_function() { #{{{
 
 watch_another() { #{{{
   while true; do #run as many episodes as possible one after another
-    color_prompt "\nWant to watch another anime? [Y/n]: "
-    read ans_another
+    color_prompt "\nWant to watch another anime? [y/N]: "
+    if [[ -z "$yes" ]]; then read ans_another
+    else ans_add="" ; print_another
+    fi
     echo
     case $ans_another in
-      ""|"y"|"Y")
+      "y"|"Y")
         [[ -z $sent ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
-      "n"|"N")
+      ""|"n"|"N")
         color_print "Exiting.\n"
         exit 0 ;;
     esac
@@ -226,6 +269,7 @@ while [ $# -ge 1 ]; do
        show_title="$1"
        show_episode="$2"
      fi ;;
+   -y|--no-confirm) yes="1" ;; # Assume default; vlc breaks if 1 is piped into anime-dl
   esac
   shift
 done
