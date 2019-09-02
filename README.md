@@ -7,6 +7,7 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 ### Features
 
 + fetch currently watching anime from your account;
++ select multiple anime to be watched in sequence;
 + watch any episode from the anime chosen, default is the next episode;
 + easily watch all available episodes after last watched, in order to catch up. Also update list accordingly;
 + promt user for watching another show without fetching list again;
@@ -16,11 +17,10 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 
 ### Requirements
 
-
 + ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. Changing the provider is a good idea, I use `animepahe`.
 + ![z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl);
 + ![junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection;
-+ ![VLC](https://www.videolan.org/vlc/) - used to play the anime. MPV can also be used.
++ ![VLC](https://www.videolan.org/vlc/) - used to play the anime. ![MPV](https://mpv.io/) can also be used: `$adl -p mpv`.
 
 ### Installation
 
