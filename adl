@@ -1,21 +1,34 @@
 #!/bin/bash
 
-## Version: 2.2.6
+## Version: 2.2.7
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
 ##   -p, --player      Define player. Ex: $adl -p mpv
 ##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018" "70"
 ##   -y, --no-confirm  Assume default option for all promts. In combination with `-p mpv` player starts automatically
+##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list
 ##   -h, --help        Display help.
 ##   -v, --version     Display version.
 
+DIR="$(dirname "$(readlink -f "$0")")"
+DB_FILE="$DIR/$0.db"
+ENTRIES_FILE="/tmp/$0.txt"
+FZF_FILE="/tmp/$0.fzf"
 yes=""
 player="vlc"
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
     [[ -z $player ]] && echo "No argument provided." || echo "Error: $player is not installed." >&2
+    print_help
+    exit 1
+  fi
+  clear
+} #}}}
+check_frece() { #{{{
+  if ! [ -x "$(command -v frece)" ]; then
+    echo "Error: frece is not installed." >&2
     print_help
     exit 1
   fi
@@ -46,19 +59,56 @@ process_list()    {
 select_function() { #{{{
   # Retrieve title and nr. Parse file only once
   if [[ -z "$1" ]]; then
-    entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
-    entry="$(echo "$entry" | process_list)"
-    present=""
+    if [[ -z "$use_frece" ]]; then
+      entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
+      entry="$(echo "$entry" | process_list)"
+      present=""
+    else
+      check_frece
+      entry="$(echo "$tlist" | process_list)"
+      present=""
+
+      echo "$entry" | cut -d'|' -f1 > "$ENTRIES_FILE"
+      # Create database
+      if [ ! -f "$DB_FILE" ]; then
+          frece init "$DB_FILE" "$ENTRIES_FILE"
+      else
+          frece update "$DB_FILE" "$ENTRIES_FILE" --purge-old
+      fi
+
+      cp "$DB_FILE" "$FZF_FILE"
+      readarray -t lines <<< "$(frece print "$DB_FILE")"
+      for line in "${lines[@]}"; do
+        chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
+        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma style line
+      done
+
+      choice="$(frece print "$FZF_FILE" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
+        (read -r x; [[ -z $x ]] || (
+          chosen="$(echo "$x" | process_list)"
+          echo "$chosen"
+          frece increment "$DB_FILE" "$(echo $chosen | cut -d'|' -f1)" ))
+        )"
+    fi
   else
     entry="$1" #retrieved custom show from adl input
     present="0"
   fi
 
-  readarray -t lines <<< "$(echo "$entry")"
-  for line in "${lines[@]}"; do
-    watch "$line" "$present"
-    echo
-  done
+  if [[ -z "$use_frece" ]]; then
+    readarray -t lines <<< "$(echo "$entry")"
+    for line in "${lines[@]}"; do
+      watch "$line" "$present"
+      echo
+    done
+  else
+    readarray -t lines <<< "$(echo "$choice")"
+    for line in "${lines[@]}"; do
+      chosen=$(echo "$entry" | grep "$line")
+      watch "$chosen" "$present"
+      echo
+    done
+  fi
 
 } #}}}
 
@@ -99,6 +149,7 @@ watch() { #{{{
   score="$(echo "$1" | cut -d'|' -f4)"
 
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
+
   echo "$title > $(($nr-1)) / $last"
 
   color_print "Enter lowercase or uppercase to issue command:
@@ -270,6 +321,7 @@ while [ $# -ge 1 ]; do
        show_episode="$2"
      fi ;;
    -y|--no-confirm) yes="1" ;; # Assume default; vlc breaks if 1 is piped into anime-dl
+   -f|--frece)      use_frece="1" ;;
   esac
   shift
 done
