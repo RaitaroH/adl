@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.1
+## Version: 2.3.2
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -83,17 +83,18 @@ select_function() { #{{{
       done
 
       line_number=1
+      [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE" # cleanup this file
       choice="$(frece print "$FZF_FILE" | \
         while IFS= read -r line ; do
           [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
           echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
           ((line_number++)); done | \
-            fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
-            (read -r x; [[ -z $x ]] || (
-              chosen="$(echo "$x" | process_list)"
-              echo "$chosen"
-              frece increment "$DB_FILE" "$(echo $chosen | cut -d'|' -f1)" ))
-            )"
+            fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
+      echo "$choice" | process_list | \
+        while IFS= read -r line ; do
+          echo "$line" >> "$ENTRIES_FILE" # reuse this file
+          frece increment "$DB_FILE" "$(echo $line | cut -d'|' -f1)"
+        done
     fi
   else
     entry="$1" #retrieved custom show from adl input
@@ -107,7 +108,7 @@ select_function() { #{{{
       echo
     done
   else
-    readarray -t lines <<< "$(echo "$choice")"
+    readarray -t lines <<< "$(cat "$ENTRIES_FILE")"
     [[ -z "$lines" ]] && color_print "Nothing was selected. Exiting." && return 0
     for line in "${lines[@]}"; do
       chosen=$(echo "$entry" | grep "$line")
