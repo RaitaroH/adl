@@ -83,7 +83,9 @@ select_function() { #{{{
         sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma style line
       done
 
-      choice="$(frece print "$FZF_FILE" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
+      line_number=1
+       choice="$(frece print "$FZF_FILE" | while IFS= read -r line ; do echo "$line" | tail -c +8 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed "s/^/${line_number}  /" | sed -e 's/^/|   /'; ((line_number++)); done
+       | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
         (read -r x; [[ -z $x ]] || (
           chosen="$(echo "$x" | process_list)"
           echo "$chosen"
