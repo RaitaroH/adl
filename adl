@@ -11,7 +11,6 @@
 ##   -h, --help        Display help.
 ##   -v, --version     Display version.
 
-DIR="$(dirname "$(readlink -f "$0")")"
 DB_FILE="~/.config/anime-downloader/adl.db"
 ENTRIES_FILE="/tmp/adl.txt"
 FZF_FILE="/tmp/adl.fzf"
