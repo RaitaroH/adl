@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.0
+## Version: 2.3.1
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -336,3 +336,7 @@ check_player
 get_list
 [[ -z "$show_title" ]] && select_function || show_function "$show_title" "$show_episode"
 watch_another
+
+# Cleanup
+[[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE" # cleanup this file
+[[ -e "$FZF_FILE" ]] && rm "$FZF_FILE" # cleanup this file
