@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.9
+## Version: 2.3.0
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -11,8 +11,7 @@
 ##   -h, --help        Display help.
 ##   -v, --version     Display version.
 
-DIR="$(dirname "$(readlink -f "$0")")"
-DB_FILE="$DIR/adl.db"
+DB_FILE="/home/$USER/.local/share/adl.db"
 ENTRIES_FILE="/tmp/adl.txt"
 FZF_FILE="/tmp/adl.fzf"
 yes=""
@@ -83,12 +82,18 @@ select_function() { #{{{
         sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma style line
       done
 
-      choice="$(frece print "$FZF_FILE" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
-        (read -r x; [[ -z $x ]] || (
-          chosen="$(echo "$x" | process_list)"
-          echo "$chosen"
-          frece increment "$DB_FILE" "$(echo $chosen | cut -d'|' -f1)" ))
-        )"
+      line_number=1
+      choice="$(frece print "$FZF_FILE" | \
+        while IFS= read -r line ; do
+          [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
+          echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
+          ((line_number++)); done | \
+            fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ' | \
+            (read -r x; [[ -z $x ]] || (
+              chosen="$(echo "$x" | process_list)"
+              echo "$chosen"
+              frece increment "$DB_FILE" "$(echo $chosen | cut -d'|' -f1)" ))
+            )"
     fi
   else
     entry="$1" #retrieved custom show from adl input
