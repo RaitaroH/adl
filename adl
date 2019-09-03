@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.2.8
+## Version: 2.2.9
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -103,6 +103,7 @@ select_function() { #{{{
     done
   else
     readarray -t lines <<< "$(echo "$choice")"
+    [[ -z "$lines" ]] && color_print "Nothing was selected. Exiting." && return 0
     for line in "${lines[@]}"; do
       chosen=$(echo "$entry" | grep "$line")
       watch "$chosen" "$present"
