@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.2
+## Version: 2.3.3
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -295,16 +295,17 @@ show_function() { #{{{
 
 watch_another() { #{{{
   while true; do #run as many episodes as possible one after another
-    color_prompt "\nWant to watch another anime? [y/N]: "
-    if [[ -z "$yes" ]]; then read ans_another
-    else ans_add="" ; print_another
+    if [[ -z "$yes" ]]; then
+      color_prompt "\nWant to watch another anime? [Y/n]: "
+      read ans_another
+    else ans_another="n"
     fi
     echo
     case $ans_another in
-      "y"|"Y")
+      ""|"y"|"Y")
         [[ -z $sent ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
-      ""|"n"|"N")
+      "n"|"N")
         color_print "Exiting.\n"
         exit 0 ;;
     esac
