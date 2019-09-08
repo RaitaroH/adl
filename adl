@@ -1,15 +1,16 @@
 #!/bin/bash
 
-## Version: 2.3.3
+## Version: 2.3.4
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
-##   -p, --player      Define player. Ex: $adl -p mpv
-##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018" "70"
-##   -y, --no-confirm  Assume default option for all promts. In combination with `-p mpv` player starts automatically
-##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list
-##   -h, --help        Display help.
-##   -v, --version     Display version.
+##   -p, --player      Define player used for streaming. Ex: $adl -p mpv;
+##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018";
+##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
+##   -y, --no-confirm  Assume default option for all promts, except watch another anime. In combination with `-p mpv` player starts automatically;
+##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
+##   -h, --help        Display help and exit;
+##   -v, --version     Display version and exit.
 
 DB_FILE="/home/$USER/.local/share/adl.db"
 ENTRIES_FILE="/tmp/adl.txt"
@@ -20,7 +21,7 @@ check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
     [[ -z $player ]] && echo "No argument provided." || echo "Error: $player is not installed." >&2
-    print_help
+    print_options
     exit 1
   fi
   clear
@@ -28,7 +29,7 @@ check_player() { #{{{
 check_frece() { #{{{
   if ! [ -x "$(command -v frece)" ]; then
     echo "Error: frece is not installed." >&2
-    print_help
+    print_options
     exit 1
   fi
   clear
@@ -37,6 +38,7 @@ watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3
 color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
 print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
+print_options()   { print_help | tail -8 ;}
 print_version()   { print_help | head -2 ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 get_list()        { tlist=$(trackma list | head -n -2 | tail -n +2) ;}
@@ -285,7 +287,7 @@ show_function() { #{{{
         if [[ ! -z $2 ]]; then
           select_function "$1|$2|12|0" #episode nr was specified
         else
-          color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl 'TITLE' 'EPISODE'\""
+          color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl -s 'TITLE' -n 'EPISODE'\""
           color_print "Episode nr can still be specified later using 'Custom' option.\n"
           select_function "$1|$2|12|0" #episode nr was specified
         fi ;;
@@ -312,24 +314,33 @@ watch_another() { #{{{
   done
 } #}}}
 
-while [ $# -ge 1 ]; do
+params="$(getopt -o vhp:s:n:yf -l version,help,player:,show:,number:,no-confirm,frece --name "$0" -- "$@")"
+# Check error for getopt
+if [ "$?" -ne 0 ]; then print_options; exit 1; fi
+eval set -- "$params"
+
+while true; do
   opt="$1"
-  shift #next argument
   case "$opt" in
-    -v|--version) print_version ; exit 0 ;;
-    -h|--help)    print_help ; exit 0 ;;
-    -p|--player)  player="$1" ;;
+    -v|--version) print_version ;  exit 0 ;;
+    -h|--help)    print_help    ;  exit 0 ;;
+    -p|--player)
+      # check if option is interpreted as argument for previous option; match getopt error format
+      # \ in printf because $2 was expanded into an argument for printf
+      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
+      else player="$2"
+      fi ;;
     -s|--show)
-      if [[ -z $1 ]]; then
-        echo "This options requires an argument!"
-        print_help | tail -6
-        exit 0
-      else
-       show_title="$1"
-       show_episode="$2"
-     fi ;;
-   -y|--no-confirm) yes="1" ;; # Assume default; vlc breaks if 1 is piped into anime-dl
-   -f|--frece)      use_frece="1" ;;
+      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
+      else show_title="$2"
+      fi ;;
+    -n|--number)
+      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
+      else show_episode="$2"
+      fi ;;
+    -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
+    -f|--frece)      use_frece="1" ;;
+    --) shift; break ;; # exit loop
   esac
   shift
 done
