@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "Baitinq",
+      "name": "Baitinq",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/30861839?v=4",
+      "profile": "https://github.com/Baitinq",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "adl",
+  "projectOwner": "RaitaroH",
+  "repoType": "github",
+  "repoHost": "https://github.com"
+}
