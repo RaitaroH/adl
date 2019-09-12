@@ -2,6 +2,7 @@
 
 ## Version: 2.3.6
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
 ##   -p, --player      Define player used for streaming. Ex: $adl -p mpv;
