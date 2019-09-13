@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.6
+## Version: 2.3.7
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -38,7 +38,7 @@ check_frece() { #{{{
 watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
-print_help()      { grep "^##" "$0" | sed -e "s/^...//" ;}
+print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_options()   { print_help | tail -8 ;}
 print_version()   { print_help | head -2 ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
