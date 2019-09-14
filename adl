@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.7
+## Version: 2.3.8
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -21,7 +21,7 @@ player="vlc"
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
-    [[ -z $player ]] && echo "No argument provided." || echo "Error: $player is not installed." >&2
+    echo "Error: '$player' is not installed." >&2
     print_options
     exit 1
   fi
@@ -29,7 +29,7 @@ check_player() { #{{{
 } #}}}
 check_frece() { #{{{
   if ! [ -x "$(command -v frece)" ]; then
-    echo "Error: frece is not installed." >&2
+    echo "Error: 'frece' is not installed." >&2
     print_options
     exit 1
   fi
