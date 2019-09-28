@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.8
+## Version: 2.3.9
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -17,7 +17,7 @@ DB_FILE="/home/$USER/.local/share/adl.db"
 ENTRIES_FILE="/tmp/adl.txt"
 FZF_FILE="/tmp/adl.fzf"
 yes=""
-player="vlc"
+player="mpv"
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
