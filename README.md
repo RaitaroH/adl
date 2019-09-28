@@ -22,7 +22,7 @@ This is wrapper for ![vn-ki/anime-downloader](https://github.com/vn-ki/anime-dow
 + ![z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following ![PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue ![#9](https://github.com/RaitaroH/adl/issues/9);
 + ![junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection;
 + ![frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
-+ ![VLC](https://www.videolan.org/vlc/) - used to play the anime. ![MPV](https://mpv.io/) can also be used: `$adl -p mpv`.
++ ![MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). ![VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`.
 
 ### Installation
 
