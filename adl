@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Version: 2.3.9
-## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+## Wrapper for anime-donwloader. Allows using watchlist given by trackma -a 1 for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -42,7 +42,7 @@ print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" 
 print_options()   { print_help | tail -8 ;}
 print_version()   { print_help | head -2 ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
-get_list()        { tlist=$(LINES=25 COLUMNS=130 trackma list | head -n -2 | tail -n +2) ;}
+get_list()        { tlist=$(LINES=25 COLUMNS=130 trackma -a 1 list | head -n -2 | tail -n +2) ;}
 process_list()    {
   sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
   awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
@@ -82,7 +82,7 @@ select_function() { #{{{
       readarray -t lines <<< "$(frece print "$DB_FILE")"
       for line in "${lines[@]}"; do
         chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
-        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma style line
+        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma -a 1 style line
       done
 
       line_number=1
@@ -213,15 +213,15 @@ watch() { #{{{
           color_print "Current episode for $title is $(($nr - 1))."
           color_prompt "Enter updated episode number: "
           read custom
-          [[ $custom != "" ]] && trackma update "$title" "$custom" || color_print "Skipping updating..." ;;
+          [[ $custom != "" ]] && trackma -a 1 update "$title" "$custom" || color_print "Skipping updating..." ;;
         "s"|"S")
           color_print "Current score for $title is $score."
           color_prompt "Enter udated score: "
           read custom
-          [[ $custom != "" ]] && trackma score "$title" "$custom" || color_print "Skipping scoring..." ;;
+          [[ $custom != "" ]] && trackma -a 1 score "$title" "$custom" || color_print "Skipping scoring..." ;;
       esac
       if [[ $custom != "" ]];  then
-        trackma send
+        trackma -a 1 send
         sent="1"
       fi
       return 0 ;;
@@ -254,16 +254,16 @@ watch() { #{{{
         [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
         [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$(( $watched + $nr - 1 ))
         if [[ $last == "?" ]]; then
-           trackma update "$title" "$nr"
+           trackma -a 1 update "$title" "$nr"
         else
-          [[ $nr -le $last ]] && trackma update "$title" "$nr" || trackma update "$title" "$last"
+          [[ $nr -le $last ]] && trackma -a 1 update "$title" "$nr" || trackma -a 1 update "$title" "$last"
         fi
         if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
           color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
           read ans_score
-          [[ $ans_score != "" ]] && trackma score "$title" "$ans_score" || color_print "Skipping scoring..."
+          [[ $ans_score != "" ]] && trackma -a 1 score "$title" "$ans_score" || color_print "Skipping scoring..."
         fi
-        trackma send
+        trackma -a 1 send
         sent="1"
         return 0 ;;
       "n"|"N")
@@ -273,8 +273,8 @@ watch() { #{{{
       "c"|"C")
         color_print "Enter custom number:"
         read custom
-        trackma update "$title" "$custom"
-        trackma send
+        trackma -a 1 update "$title" "$custom"
+        trackma -a 1 send
         sent="1"
         return 0 ;;
       *)
@@ -296,8 +296,8 @@ show_function() { #{{{
     echo
     case $ans_add in
       "y"|"Y")
-        trackma add "$1"
-        trackma send
+        trackma -a 1 add "$1"
+        trackma -a 1 send
         color_print "\nRetrieving updated anime list...\n"
         get_list
         select_function ;; #anime is in list
