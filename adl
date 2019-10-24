@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Version: 2.3.9
+## Version: 2.4.0
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma -a 1 for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -8,7 +8,7 @@
 ##   -p, --player      Define player used for streaming. Ex: $adl -p mpv;
 ##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018";
 ##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
-##   -y, --no-confirm  Assume default option for all promts, except watch another anime. In combination with `-p mpv` player starts automatically;
+##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
@@ -192,7 +192,7 @@ watch() { #{{{
       animedl "$player" "$title" "$nr" ;;
     "u"|"U")
       color_print "\nSkipping watching episodes. Modifing entry."
-      color_prompt "Update episode number or update scoore [E/s]: "
+      color_prompt "Update episode number or update score [E/s]: "
       read ans_modify
       case $ans_modify in
         ""|"e"|"E")
