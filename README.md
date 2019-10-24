@@ -33,6 +33,7 @@ mkdir -p "$HOME/bin"
 wget https://raw.githubusercontent.com/RaitaroH/adl/master/adl -O "$HOME/bin/adl"
 chmod +x "$HOME/bin/adl"
 ```
+If you are using Arch Linux you can get the script from the Arch Linux User Repository (AUR): https://aur.archlinux.org/packages/adl-git/
 
 ## Contributors ✨
 
