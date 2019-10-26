@@ -18,7 +18,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 
 ### Requirements
 
-+ [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. Git version required for `$adl -y`. Changing the provider is a good idea, I use `animepahe`.
++ [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. [Git version](https://github.com/vn-ki/anime-downloader/issues/226) required for `$adl -y`. Changing the provider is a good idea, I use `animepahe`.
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection;
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
