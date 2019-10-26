@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Version: 2.4.0
-## Wrapper for anime-donwloader. Allows using watchlist given by trackma -a 1 for a better anime watching cli experience.
+## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -10,6 +10,7 @@
 ##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
+##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -18,6 +19,7 @@ ENTRIES_FILE="/tmp/adl.txt"
 FZF_FILE="/tmp/adl.fzf"
 yes=""
 player="mpv"
+account="1"
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
@@ -42,7 +44,7 @@ print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" 
 print_options()   { print_help | tail -8 ;}
 print_version()   { print_help | head -2 ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
-get_list()        { tlist=$(LINES=25 COLUMNS=130 trackma -a 1 list | head -n -2 | tail -n +2) ;}
+get_list()        { tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2) ;}
 process_list()    {
   sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
   awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
@@ -82,7 +84,7 @@ select_function() { #{{{
       readarray -t lines <<< "$(frece print "$DB_FILE")"
       for line in "${lines[@]}"; do
         chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
-        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma -a 1 style line
+        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma -a "$account" style line
       done
 
       line_number=1
@@ -199,15 +201,15 @@ watch() { #{{{
           color_print "Current episode for $title is $(($nr - 1))."
           color_prompt "Enter updated episode number: "
           read custom
-          [[ $custom != "" ]] && trackma -a 1 update "$title" "$custom" || color_print "Skipping updating..." ;;
+          [[ $custom != "" ]] && trackma -a "$account" update "$title" "$custom" || color_print "Skipping updating..." ;;
         "s"|"S")
           color_print "Current score for $title is $score."
           color_prompt "Enter udated score: "
           read custom
-          [[ $custom != "" ]] && trackma -a 1 score "$title" "$custom" || color_print "Skipping scoring..." ;;
+          [[ $custom != "" ]] && trackma -a "$account" score "$title" "$custom" || color_print "Skipping scoring..." ;;
       esac
       if [[ $custom != "" ]];  then
-        trackma -a 1 send
+        trackma -a "$account" send
         sent="1"
       fi
       return 0 ;;
@@ -240,16 +242,16 @@ watch() { #{{{
         [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
         [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$(( $watched + $nr - 1 ))
         if [[ $last == "?" ]]; then
-           trackma -a 1 update "$title" "$nr"
+           trackma -a "$account" update "$title" "$nr"
         else
-          [[ $nr -le $last ]] && trackma -a 1 update "$title" "$nr" || trackma -a 1 update "$title" "$last"
+          [[ $nr -le $last ]] && trackma -a "$account" update "$title" "$nr" || trackma -a "$account" update "$title" "$last"
         fi
         if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
           color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
           read ans_score
-          [[ $ans_score != "" ]] && trackma -a 1 score "$title" "$ans_score" || color_print "Skipping scoring..."
+          [[ $ans_score != "" ]] && trackma -a "$account" score "$title" "$ans_score" || color_print "Skipping scoring..."
         fi
-        trackma -a 1 send
+        trackma -a "$account" send
         sent="1"
         return 0 ;;
       "n"|"N")
@@ -259,8 +261,8 @@ watch() { #{{{
       "c"|"C")
         color_print "Enter custom number:"
         read custom
-        trackma -a 1 update "$title" "$custom"
-        trackma -a 1 send
+        trackma -a "$account" update "$title" "$custom"
+        trackma -a "$account" send
         sent="1"
         return 0 ;;
       *)
@@ -282,8 +284,8 @@ show_function() { #{{{
     echo
     case $ans_add in
       "y"|"Y")
-        trackma -a 1 add "$1"
-        trackma -a 1 send
+        trackma -a "$account" add "$1"
+        trackma -a "$account" send
         color_print "\nRetrieving updated anime list...\n"
         get_list
         select_function ;; #anime is in list
@@ -318,7 +320,7 @@ watch_another() { #{{{
   done
 } #}}}
 
-params="$(getopt -o vhp:s:n:yf -l version,help,player:,show:,number:,no-confirm,frece --name "$0" -- "$@")"
+params="$(getopt -o vhp:s:n:a:yf -l version,help,player:,show:,number:,account:,no-confirm,frece --name "$0" -- "$@")"
 # Check error for getopt
 if [ "$?" -ne 0 ]; then print_options; exit 1; fi
 eval set -- "$params"
@@ -341,6 +343,10 @@ while true; do
     -n|--number)
       if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
       else show_episode="$2"
+      fi ;;
+    -a|--account)
+      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
+      else account="$2"
       fi ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -f|--frece)      use_frece="1" ;;
