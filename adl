@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version: 2.4.2
+## Version: 2.4.3
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -343,19 +343,19 @@ while true; do
       # check if option is interpreted as argument for previous option; match getopt error format
       # \ in printf because $2 was expanded into an argument for printf
       if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else player="$2"
+      else player="$(xargs <<< $2)"
       fi ;;
     -s|--show)
       if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else show_title="$2"
+      else show_title="$(xargs <<< $2)"
       fi ;;
     -n|--number)
       if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else show_episode="$2"
+      else show_episode="$(xargs <<< $2)"
       fi ;;
     -a|--account)
       if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else account="$2"
+      else account="$(xargs <<< $2)"
       fi ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
