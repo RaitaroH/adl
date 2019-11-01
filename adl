@@ -329,6 +329,14 @@ watch_another() { #{{{
   done
 } #}}}
 
+arguments() { #{{{
+  # check if option is interpreted as argument for previous option; match getopt error format
+  # \ in printf because $2 was expanded into an argument for printf
+  if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$1'"; print_options; exit 1
+  else eval "$3='$(xargs <<< $2)'"
+  fi
+} #}}}
+
 params="$(getopt -o vhp:s:n:a:yrf -l version,help,player:,show:,number:,account:,no-confirm,retrieve,frece --name "$0" -- "$@")"
 # Check error for getopt
 if [ "$?" -ne 0 ]; then print_options; exit 1; fi
@@ -339,24 +347,10 @@ while true; do
   case "$opt" in
     -v|--version) print_version ;  exit 0 ;;
     -h|--help)    print_help    ;  exit 0 ;;
-    -p|--player)
-      # check if option is interpreted as argument for previous option; match getopt error format
-      # \ in printf because $2 was expanded into an argument for printf
-      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else player="$(xargs <<< $2)"
-      fi ;;
-    -s|--show)
-      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else show_title="$(xargs <<< $2)"
-      fi ;;
-    -n|--number)
-      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else show_episode="$(xargs <<< $2)"
-      fi ;;
-    -a|--account)
-      if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$opt'"; print_options; exit 1
-      else account="$(xargs <<< $2)"
-      fi ;;
+    -p|--player)  arguments "$opt" "$2" player ;;
+    -s|--show)    arguments "$opt" "$2" show_title ;;
+    -n|--number)  arguments "$opt" "$2" show_episode ;;
+    -a|--account) arguments "$opt" "$2" account ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -f|--frece)      use_frece="1" ;;
