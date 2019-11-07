@@ -107,7 +107,7 @@ select_function() { #{{{
       echo "$choice" | process_list | \
         while IFS= read -r line ; do
           echo "$line" >> "$ENTRIES_FILE" # reuse this file
-          frece increment "$DB_FILE" "$(echo $line | cut -d'|' -f1)"
+          frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
     fi
   else
@@ -168,7 +168,7 @@ watch() { #{{{
     U - Update entry chosen instead of streaming
     S - Skip the watching. Choose another show."
   color_prompt "Your choice? [N/l/a/r/c/u/s]: "
-  if [[ -z "$yes" ]]; then read ans_episode
+  if [[ -z "$yes" ]]; then read -r ans_episode
   else ans_episode="" ; print_noconfirm
   fi
   case $ans_episode in
@@ -182,7 +182,7 @@ watch() { #{{{
       else
         color_print "The last episode number is unknown."
         color_prompt "How many episodes after currnet you want to watch? : "
-        if [[ -z "$yes" ]]; then read ans_nr
+        if [[ -z "$yes" ]]; then read -r ans_nr
         else ans_nr="" ; print_noconfirm
         fi
         [[ $ans_nr != "" ]] && last=$(( $nr + $ans_nr)) || last=$(( $nr + 5))
@@ -198,23 +198,23 @@ watch() { #{{{
       animedl "$player" "$title" "$nr" ;;
     "c"|"C")
       color_prompt "Enter custom number: "
-      read nr
+      read -r nr
       watching_prompt "$title" "episode" "#$nr"
       animedl "$player" "$title" "$nr" ;;
     "u"|"U")
       color_print "\nSkipping watching episodes. Modifing entry."
       color_prompt "Update episode number or update score [E/s]: "
-      read ans_modify
+      read -r ans_modify
       case $ans_modify in
         ""|"e"|"E")
           color_print "Current episode for $title is $(($nr - 1))."
           color_prompt "Enter updated episode number: "
-          read custom
+          read -r custom
           [[ $custom != "" ]] && trackma -a "$account" update "$title" "$custom" || color_print "Skipping updating..." ;;
         "s"|"S")
           color_print "Current score for $title is $score."
           color_prompt "Enter udated score: "
-          read custom
+          read -r custom
           [[ $custom != "" ]] && trackma -a "$account" score "$title" "$custom" || color_print "Skipping scoring..." ;;
       esac
       if [[ $custom != "" ]];  then
@@ -233,9 +233,9 @@ watch() { #{{{
   # Initialize watched counter
   case $player in
     "vlc")
-      watched=$(echo "$out" | grep 'Command Line Interface initialized' | wc -l) ;;
+      watched=$(echo "$out" | grep -c 'Command Line Interface initialized') ;;
     "mpv")
-      watched=$(echo "$out" | grep 'fps' | wc -l) ;;
+      watched=$(echo "$out" | grep -c 'fps') ;;
     *)
       watched=1 ;;
   esac
@@ -243,7 +243,7 @@ watch() { #{{{
 
   if [[ -z "$2" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
-    if [[ -z "$yes" ]]; then read ans_update
+    if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
     fi
     case $ans_update in
@@ -257,7 +257,7 @@ watch() { #{{{
         fi
         if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
           color_prompt "\nAnime will be set to completed. Also rate the anime? Type score: "
-          read ans_score
+          read -r ans_score
           [[ $ans_score != "" ]] && trackma -a "$account" score "$title" "$ans_score" || color_print "Skipping scoring..."
         fi
         trackma -a "$account" send
@@ -269,7 +269,7 @@ watch() { #{{{
         return 0 ;;
       "c"|"C")
         color_print "Enter custom number:"
-        read custom
+        read -r custom
         trackma -a "$account" update "$title" "$custom"
         trackma -a "$account" send
         sent="1"
@@ -282,12 +282,12 @@ watch() { #{{{
 } #end of watch() }}}
 
 show_function() { #{{{
-  if echo $tlist | grep -q "$1" ;then
+  if echo "$tlist" | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
     select_function "$(echo "$tlist" | grep "$1" | process_list)"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
-    if [[ -z "$yes" ]]; then read ans_add
+    if [[ -z "$yes" ]]; then read -r ans_add
     else ans_add="" ; print_noconfirm
     fi
     echo
@@ -299,7 +299,7 @@ show_function() { #{{{
         get_list
         select_function ;; #anime is in list
       ""|"n"|"N")
-        if [[ ! -z $2 ]]; then
+        if [[ -n $2 ]]; then
           select_function "$1|$2|12|0" #episode nr was specified
         else
           color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl -s 'TITLE' -n 'EPISODE'\""
@@ -314,13 +314,13 @@ watch_another() { #{{{
   while true; do #run as many episodes as possible one after another
     if [[ -z "$yes" ]]; then
       color_prompt "\nWant to watch another anime? [Y/n]: "
-      read ans_another
+      read -r ans_another
     else ans_another="n"
     fi
     echo
     case $ans_another in
       ""|"y"|"Y")
-        [[ -z $sent ]] || color_print "\nRetrieving updated anime list...\n" && get_list
+        [[ -z "$sent" ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
       "n"|"N")
         color_print "Exiting.\n"
@@ -333,7 +333,7 @@ arguments() { #{{{
   # check if option is interpreted as argument for previous option; match getopt error format
   # \ in printf because $2 was expanded into an argument for printf
   if printf "\ $2" | grep -q "-"; then echo "$0: option requires an argument -- '$1'"; print_options; exit 1
-  else eval "$3='$(xargs <<< $2)'"
+  else eval "$3='$(xargs <<< "$2")'"
   fi
 } #}}}
 
