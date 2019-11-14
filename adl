@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version: 2.4.5
+## Version: 2.4.6
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -154,6 +154,7 @@ watch() { #{{{
   nr="$(($(echo "$1" | cut -d'|' -f2) + 1))" #dat spacing tho
    last="$(echo "$1" | cut -d'|' -f3)"
   score="$(echo "$1" | cut -d'|' -f4)"
+  [[ "$last" == "?" ]] && last=$(($nr + 12))
 
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
 
