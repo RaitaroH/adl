@@ -52,7 +52,7 @@ get_list()        { #{{{
     trackma -a "$account" retrieve
     clear
   fi
-  tlist=$(LINES=25 COLUMNS=130 trackma -a 1 list | head -n -2 | tail -n +2)
+  tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
   sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
