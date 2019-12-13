@@ -164,11 +164,12 @@ watch() { #{{{
     N - Next episode (default, press <ENTER>)
     L - from current to Last known
     A - All available, from episode 1
+    I - custom Interval (range) of episodes
     R - Rewatch current episode only
     C - Custom episode
     U - Update entry chosen instead of streaming
     S - Skip the watching. Choose another show."
-  color_prompt "Your choice? [N/l/a/r/c/u/s]: "
+  color_prompt "Your choice? [N/l/a/i/r/c/u/s]: "
   if [[ -z "$yes" ]]; then read -r ans_episode
   else ans_episode="" ; print_noconfirm
   fi
@@ -193,6 +194,13 @@ watch() { #{{{
     "a"|"A")
       watching_prompt "$title" "starting with episode" "#1"
       animedl "$player" "$title" ;;
+    "i"|"I")
+      color_prompt "Starting episode of episodes range: "
+      read -r interval_start
+      color_prompt "Last episode of episodes range: "
+      read -r interval_stop
+      watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
+      animedl "$player" "$title" "$interval_start" "$interval_stop" ;;
     "r"|"R")
       nr=$(($nr - 1))
       watching_prompt "$title" "episode" "#$nr"
