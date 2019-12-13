@@ -136,14 +136,14 @@ select_function() { #{{{
 animedl() { #{{{
   [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
   if [[ "$4" != "" ]]; then
-    { out=$(anime dl --play "$1" "$2" --episodes "$3":"$4" "$choice" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+    { out=$(anime dl --play "$1" "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
     return 1
   else
     if [[ "$3" != "" ]]; then
-      { out=$(anime dl --play "$1" "$2" --episodes "$3" "$choice" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      { out=$(anime dl --play "$1" "$2" --episodes "$3" "$choice" | tee >(cat - >&5)); } 5>&1
       return 1
     else
-      { out=$(anime dl --play "$1" "$2" "$choice" 2> /dev/null | tee >(cat - >&5)); } 5>&1
+      { out=$(anime dl --play "$1" "$2" "$choice" | tee >(cat - >&5)); } 5>&1
       return 1
     fi
   fi
