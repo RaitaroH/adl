@@ -22,6 +22,7 @@ yes=""
 player="mpv"
 account="1"
 retrieve=""
+ctrlc=0
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
@@ -39,6 +40,7 @@ check_frece() { #{{{
   fi
   clear
 } #}}}
+trap_ctrlc()      { ctrlc=1 ;}
 watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
@@ -134,6 +136,9 @@ select_function() { #{{{
 } #}}}
 
 animedl() { #{{{
+  # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
+  trap "trap_ctrlc" 2
+
   [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
   if [[ "$4" != "" ]]; then
     { out=$(anime dl --play "$1" "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
@@ -248,6 +253,7 @@ watch() { #{{{
     *)
       watched=1 ;;
   esac
+  [[ $ctrlc   == 1 ]] && watched=$(($watched - 1)) # if Ctrl-C was caught one extra episode was counted
   [[ $watched == 0 ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
 
   if [[ -z "$2" ]]; then #only ask if anime is in list
@@ -329,6 +335,7 @@ watch_another() { #{{{
     echo
     case $ans_another in
       ""|"y"|"Y")
+        ctrlc=0 #making sure this counter is reset
         [[ -z "$sent" ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
       "n"|"N")
