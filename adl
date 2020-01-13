@@ -46,7 +46,7 @@ watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3
 color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
 print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -10 ;}
+print_options()   { print_help | tail -11 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 get_list()        { #{{{
