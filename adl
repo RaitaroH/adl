@@ -12,6 +12,7 @@
 ##   -r, --retrieve    Run trackma retrieve to update local list
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
+##   -u, --update      Update this script from github master;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -345,6 +346,22 @@ watch_another() { #{{{
   done
 } #}}}
 
+updater() { #{{{
+  DIR=$(cd "$(dirname "$0")" ; pwd)
+  FILE=$(basename "$0")
+  MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
+  printf "\033[0;31m$MESSAGE\033[0m" #red warning
+  # integration with -y option crossed my mind but it is unwise
+  read -r updater_ans
+  case $updater_ans in
+    "y"|"Y")
+      wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE"
+      color_print "✓ Update is complete." ;;
+    ""|"n"|"N")
+      color_print "Update aborted." ;;
+  esac
+} #}}}
+
 arguments() { #{{{
   # check if option is interpreted as argument for previous option; match getopt error format
   # \ in printf because $2 was expanded into an argument for printf
@@ -353,7 +370,7 @@ arguments() { #{{{
   fi
 } #}}}
 
-params="$(getopt -o vhp:s:n:a:yrf -l version,help,player:,show:,number:,account:,no-confirm,retrieve,frece --name "$0" -- "$@")"
+params="$(getopt -o vhup:s:n:a:yrf -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,frece --name "$0" -- "$@")"
 # Check error for getopt
 if [ "$?" -ne 0 ]; then print_options; exit 1; fi
 eval set -- "$params"
@@ -363,6 +380,7 @@ while true; do
   case "$opt" in
     -v|--version) print_version ;  exit 0 ;;
     -h|--help)    print_help    ;  exit 0 ;;
+    -u|--update)  updater       ;  exit 0 ;;
     -p|--player)  arguments "$opt" "$2" player ;;
     -s|--show)    arguments "$opt" "$2" show_title ;;
     -n|--number)  arguments "$opt" "$2" show_episode ;;
