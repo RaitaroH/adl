@@ -38,6 +38,10 @@ chmod +x "$HOME/bin/adl"
 ```
 If you are using Arch Linux you can install from the [Arch Linux User Repository (AUR)](https://aur.archlinux.org/packages/adl-git/) thanks to [@Baitinq](https://github.com/Baitinq).
 
+### Updating
+
+`adl` also has a function for updating itself from source. To use it run `adl -u` or `adl --update` and follow the prompts.
+
 ### Issues
 
 If the show doesn't start for you, the script will inform you of this. If you are positive that the episode number has aired, then most likely the provider you are using is NOT yet up-to-date. If you want to try every provider to see where your show is hosted you can try this bash code to cycle through all of them.
