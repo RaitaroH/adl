@@ -368,7 +368,7 @@ updater() { #{{{
           color_print "Not an actual option. Exiting..."
           exit 1 ;;
       esac
-      color_print "✓ Update from $source is complete." ;;
+      color_print "\n✓ Update from $source is complete." ;;
     ""|"n"|"N")
       color_print "Update aborted." ;;
     *)
