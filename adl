@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version: 2.4.7
+## Version: 2.4.8
 ## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
