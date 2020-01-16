@@ -12,6 +12,7 @@
 ##   -r, --retrieve    Run trackma retrieve to update local list
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
+##   -u, --update      Update this script from github master;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -22,6 +23,7 @@ yes=""
 player="mpv"
 account="1"
 retrieve=""
+ctrlc=0
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
@@ -39,11 +41,12 @@ check_frece() { #{{{
   fi
   clear
 } #}}}
+trap_ctrlc()      { ctrlc=1 ;}
 watching_prompt() { echo -e "\nNow watching \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m" ;}
 color_print()     { echo -e "\033[0;36m$@ \033[0m" ;} #for normal output
 color_prompt()    { printf "\033[0;34m$@\033[0m" ;} #for user input
 print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -10 ;}
+print_options()   { print_help | tail -11 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 get_list()        { #{{{
@@ -134,6 +137,9 @@ select_function() { #{{{
 } #}}}
 
 animedl() { #{{{
+  # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
+  trap "trap_ctrlc" 2
+
   [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
   if [[ "$4" != "" ]]; then
     { out=$(anime dl --play "$1" "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
@@ -248,7 +254,8 @@ watch() { #{{{
     *)
       watched=1 ;;
   esac
-  [[ $watched == 0 ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
+  [[ $ctrlc   == 1 ]] && watched=$(($watched - 1)) # if Ctrl-C was caught one extra episode was counted
+  [[ $watched == 0 && $ctrlc == 0 ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
 
   if [[ -z "$2" ]]; then #only ask if anime is in list
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
@@ -329,6 +336,7 @@ watch_another() { #{{{
     echo
     case $ans_another in
       ""|"y"|"Y")
+        ctrlc=0 #making sure this counter is reset
         [[ -z "$sent" ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
       "n"|"N")
@@ -336,6 +344,37 @@ watch_another() { #{{{
         exit 0 ;;
     esac
   done
+} #}}}
+
+updater() { #{{{
+  DIR=$(cd "$(dirname "$0")" ; pwd)
+  FILE=$(basename "$0")
+  MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
+  printf "\033[0;31m$MESSAGE\033[0m" #red warning
+  # integration with -y option crossed my mind but it is unwise
+  read -r updater_ans
+  case $updater_ans in
+    "y"|"Y")
+      color_prompt "\nadl can be updated from master or develop. Which one do you choose? [M/d]: "
+      read -r source_ans
+      case $source_ans in
+        ""|"M"|"m")
+          source="master"
+          wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE" ;;
+        "d"|"D")
+          source="develop"
+          wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/develop/adl" -O "$DIR/$FILE" ;;
+        *)
+          color_print "Not an actual option. Exiting..."
+          exit 1 ;;
+      esac
+      color_print "\n✓ Update from $source is complete." ;;
+    ""|"n"|"N")
+      color_print "Update aborted." ;;
+    *)
+      color_print "Not an actual option. Exiting..."
+      exit 1 ;;
+  esac
 } #}}}
 
 arguments() { #{{{
@@ -346,7 +385,7 @@ arguments() { #{{{
   fi
 } #}}}
 
-params="$(getopt -o vhp:s:n:a:yrf -l version,help,player:,show:,number:,account:,no-confirm,retrieve,frece --name "$0" -- "$@")"
+params="$(getopt -o vhup:s:n:a:yrf -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,frece --name "$0" -- "$@")"
 # Check error for getopt
 if [ "$?" -ne 0 ]; then print_options; exit 1; fi
 eval set -- "$params"
@@ -356,6 +395,7 @@ while true; do
   case "$opt" in
     -v|--version) print_version ;  exit 0 ;;
     -h|--help)    print_help    ;  exit 0 ;;
+    -u|--update)  updater       ;  exit 0 ;;
     -p|--player)  arguments "$opt" "$2" player ;;
     -s|--show)    arguments "$opt" "$2" show_title ;;
     -n|--number)  arguments "$opt" "$2" show_episode ;;
