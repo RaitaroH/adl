@@ -8,7 +8,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 ### Features
 
 + fetch currently watching anime from your account;
-+ option to change account used by trackma
++ option to change account used by trackma;
 + option to update local list;
 + select multiple anime to be watched in sequence;
 + watch any episode from the anime chosen, default is the next episode;
@@ -16,6 +16,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + prompt user for watching another show;
 + prompt user to add a score to an anime if the anime in question will be set as completed;
 + option to skip all user input - works in combination with the other options as well;
++ download instead of watching; everything from above still applies;
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
