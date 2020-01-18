@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Version: 2.4.8
-## Wrapper for anime-donwloader. Allows using watchlist given by trackma for a better anime watching cli experience.
+## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
 ## Options:
@@ -10,7 +10,7 @@
 ##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
 ##   -r, --retrieve    Run trackma retrieve to update local list
-##   -d, --download    Donwload instead of streaming
+##   -d, --download    Download instead of streaming
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -u, --update      Update this script from github master;
@@ -51,7 +51,7 @@ print_options()   { print_help | tail -12 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
-  [[ "$download" == "0" ]] && var="watching" || var="donwloading"
+  [[ "$download" == "0" ]] && var="watching" || var="downloading"
   echo -e "\nNow $var \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m"
 }
 get_list()        { #{{{
@@ -265,7 +265,7 @@ watch() { #{{{
       watched=1 ;;
   esac
   [[ "$ctrlc"   == "1" ]] && watched=$(($watched - 1)) # if Ctrl-C was caught one extra episode was counted
-  [[ "$watched" == "0" && "$ctrlc" == "0" && "$donwload" == "0" ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
+  [[ "$watched" == "0" && "$ctrlc" == "0" && "$download" == "0" ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
 
   if [[ -z "$2" && "$download" == "0" ]]; then #only ask if anime is in list, only if streaming
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
@@ -339,7 +339,7 @@ show_function() { #{{{
 watch_another() { #{{{
   while true; do #run as many episodes as possible one after another
     if [[ -z "$yes" ]]; then
-      [[ "$download" == "0" ]] && var="watch" || var="donwload"
+      [[ "$download" == "0" ]] && var="watch" || var="download"
       color_prompt "\nWant to $var another anime? [Y/n]: "
       read -r ans_another
     else ans_another="n"
