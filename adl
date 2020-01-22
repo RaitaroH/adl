@@ -409,13 +409,13 @@ eval set -- "$params"
 while true; do
   opt="$1"
   case "$opt" in
-    -v|--version) print_version ;  exit 0 ;;
-    -h|--help)    print_help    ;  exit 0 ;;
-    -u|--update)  updater       ;  exit 0 ;;
-    -p|--player)  arguments "$opt" "$2" player ;;
-    -s|--show)    arguments "$opt" "$2" show_title ;;
-    -n|--number)  arguments "$opt" "$2" show_episode ;;
-    -a|--account) arguments "$opt" "$2" account ;;
+    -v|--version)    print_version  ;  exit 0 ;;
+    -h|--help)       print_help     ;  exit 0 ;;
+    -u|--update)     updater        ;  exit 0 ;;
+    -p|--player)     arguments "$opt" "$2" player ;;
+    -s|--show)       arguments "$opt" "$2" show_title ;;
+    -n|--number)     arguments "$opt" "$2" show_episode ;;
+    -a|--account)    arguments "$opt" "$2" account ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -d|--download)   download="1"  ;; # Download instead of streaming
