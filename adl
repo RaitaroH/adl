@@ -351,6 +351,8 @@ watch_another() { #{{{
     case $ans_another in
       ""|"y"|"Y")
         ctrlc=0 #making sure this counter is reset
+        show_title=""
+        show_episode=""
         [[ -z "$sent" ]] || color_print "\nRetrieving updated anime list...\n" && get_list
         select_function ;;
       "n"|"N")
