@@ -333,8 +333,9 @@ show_function() { #{{{
         if [[ -n $2 ]]; then
           select_function "$1|$2|12|0" #episode nr was specified
         else
-          color_print "Episode nr not specified. adl will proceed with a few guesses. Next time add the anime to list or run: \"\$adl -s 'TITLE' -n 'EPISODE'\""
-          color_print "Episode nr can still be specified later using 'Custom' option.\n"
+          color_print "Episode nr not specified. adl will proceed with a few guesses. \
+          \nNext time add the anime to list or run: \"\$adl -s 'TITLE' -n 'EPISODE'\" \
+          \nEpisode nr can still be specified later using 'Custom' option.\n"
           select_function "$1|$2|12|0" #episode nr was specified
         fi ;;
     esac
