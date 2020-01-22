@@ -270,7 +270,10 @@ watch() { #{{{
       watched=1 ;;
   esac
   [[ "$ctrlc"   == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
-  [[ "$watched" == "0" && "$ctrlc" == "0" && "$download" == "0" ]] && color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..." && return 0
+  if [[ "$watched" == "0" && "$ctrlc" == "0" && "$download" == "0" ]]; then
+    color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..."
+    return 0
+  fi
 
   if [[ -z "$2" && "$download" == "0" ]]; then #only ask if anime is in list, only if streaming
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
