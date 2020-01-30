@@ -8,7 +8,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 ### Features
 
 + fetch currently watching anime from your account;
-+ option to change account used by trackma
++ option to change account used by trackma;
 + option to update local list;
 + select multiple anime to be watched in sequence;
 + watch any episode from the anime chosen, default is the next episode;
@@ -16,6 +16,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + prompt user for watching another show;
 + prompt user to add a score to an anime if the anime in question will be set as completed;
 + option to skip all user input - works in combination with the other options as well;
++ download instead of watching; everything from above still applies;
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
@@ -47,12 +48,21 @@ If you are using Arch Linux you can install from the [Arch Linux User Repository
 If the show doesn't start for you, the script will inform you of this. If you are positive that the episode number has aired, then most likely the provider you are using is NOT yet up-to-date. If you want to try every provider to see where your show is hosted you can try this bash code to cycle through all of them.
 
 ```
-declare -a provider=(animeflix animepahe animefreak animeflv anistream gogoanime kissanime kisscartoon twist.moe itsaturday)
-for (( k=1; k<=${#provider[@]}; k++ )); do
-  printf "\n\033[0;31m%s\n" "PROVIDER: ${provider[$k]}"
-  anime dl 'Gundam: The Origin' --episodes 1 --provider "${provider[$k]}" --play mpv
-done
+adlwrap() {
+  declare -a provider=(animepahe animeflix animefreak animeflv anistream gogoanime kissanime kisscartoon twist.moe itsaturday)
+  for k in $provider; do
+    printf "\n\033[0;31m%s\n" "PROVIDER: $k"
+    anime dl "$1" --episodes "$2" --provider "$k" --play mpv
+  done
+}
 ```
+
+The function above can be used like so: `$ adlwrap "SHOW" "EPISODE"`:
+
+```
+$ adlwrap "Gundam: The Origin" "1"
+```
+
 The providers there can be found with `anime dl --help`.
 
 ## Contributors ✨
