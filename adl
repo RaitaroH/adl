@@ -9,9 +9,9 @@
 ##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018";
 ##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
-##   -r, --retrieve    Run trackma retrieve to update local list
-##   -d, --download    Download instead of streaming
-##   -l, --local       Use local files instead of streaming
+##   -r, --retrieve    Run trackma retrieve to update local list;
+##   -d, --download    Download instead of streaming;
+##   -l, --local       Use local files instead of streaming. Define folder to be used for local as argument;
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -u, --update      Update this script from github master;
@@ -456,8 +456,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:s:n:a:yrdlf \
-                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,local,frece \
+if ! params="$(getopt -o vhup:s:n:a:yrdl:f \
+                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,local:,frece \
                       --name "$0" -- "$@")"; then print_options; exit 1; fi
 eval set -- "$params"
 
@@ -474,7 +474,7 @@ while true; do
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -d|--download)   download="1"  ;; # Download instead of streaming
-    -l|--local)      local="1"     ;; # Use local files instead of streaming
+    -l|--local)      arguments "$opt" "$2" animedir; local=1 ;; # Use local media instead of streaming
     -f|--frece)      use_frece="1" ;;
     --) shift; break ;; # exit loop
   esac
