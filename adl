@@ -28,6 +28,11 @@ account="1"
 retrieve=""
 download="0"
 ctrlc="0"
+
+# An array of anime that end with a fullstop/period/dot
+# required for trackma updating
+declare -a exceptions=(Bakuman)
+
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
@@ -239,6 +244,10 @@ watch() { #{{{
     "u"|"U")
       color_print "\nSkipping watching episodes. Modifing entry."
       color_prompt "Update episode number or update score [E/s]: "
+
+      # test if an anime title has a period at the end or not. If yes add one
+      for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+
       read -r ans_modify
       case $ans_modify in
         ""|"e"|"E")
@@ -284,11 +293,13 @@ watch() { #{{{
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
-    fi
+  fi
+
+    # test if an anime title has a period at the end or not. If yes add one
+    for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+
     case $ans_update in
       ""|"y"|"Y")
-        [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
-        [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
         [[ $no_update == 1 ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
         [[ $watched -gt 1  ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
         if [[ $last == "?" ]]; then
