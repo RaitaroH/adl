@@ -35,7 +35,7 @@ animedir=""
 
 # An array of anime that end with a fullstop/period/dot
 # required for trackma updating
-declare -a exceptions=(Bakuman)
+declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato")
 
 check_player() { #{{{
   # Exit if "$player" is not installed
@@ -213,6 +213,9 @@ watch() { #{{{
 
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
 
+  # test if an anime title has a period at the end or not. If yes add one
+  for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+
   echo "$title > $((nr-1)) / $last"
 
   if [ -z "$show_episode" ]; then # if -n was used skip this, -r will be chosen
@@ -275,9 +278,6 @@ watch() { #{{{
     "u"|"U")
       color_print "\nSkipping watching episodes. Modifing entry."
       color_prompt "Update episode number or update score [E/s]: "
-
-      # test if an anime title has a period at the end or not. If yes add one
-      for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
 
       read -r ans_modify
       case $ans_modify in
