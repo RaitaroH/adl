@@ -195,6 +195,7 @@ watch() { #{{{
     fi
   else ans_episode="r"
   fi
+  no_update=0
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt "$title" "episode" "#$nr"
@@ -217,6 +218,7 @@ watch() { #{{{
       watching_prompt "$title" "starting with episode" "#1"
       animedl "$player" "$title" ;;
     "i"|"I")
+      no_update=1
       color_prompt "Starting episode of episodes range: "
       read -r interval_start
       color_prompt "Last episode of episodes range: "
@@ -224,10 +226,12 @@ watch() { #{{{
       watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
       animedl "$player" "$title" "$interval_start" "$interval_stop" ;;
     "r"|"R")
+      no_update=1
       nr=$((nr - 1))
       watching_prompt "$title" "episode" "#$nr"
       animedl "$player" "$title" "$nr" ;;
     "c"|"C")
+      no_update=1
       color_prompt "Enter custom number: "
       read -r nr
       watching_prompt "$title" "episode" "#$nr"
@@ -285,6 +289,8 @@ watch() { #{{{
       ""|"y"|"Y")
         [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
         [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
+        [[ $no_update == 1 ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
+        [[ $watched -gt 1  ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
         if [[ $last == "?" ]]; then
            trackma -a "$account" update "$title" "$nr"
         else
