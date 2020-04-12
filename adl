@@ -146,6 +146,7 @@ select_function() { #{{{
 animedl() { #{{{
   # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
   trap "trap_ctrlc" 2
+  color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
 
   [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
 
