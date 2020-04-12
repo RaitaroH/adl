@@ -17,7 +17,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + prompt user to add a score to an anime if the anime in question will be set as completed;
 + option to skip all user input - works in combination with the other options as well;
 + download instead of watching; everything from above still applies;
-+ use local media instead of streaming. Requires identical folder name to anilist anime title;
++ use local media instead of streaming. Requires identical folder name to anilist anime title, ex: `Fruits Basket: 2nd Season` should be a folder in `animedir` variable, otherwise `adl` will **not** find the anime folder. Considering random episode numbering, `fzf` is used for episode selecting.
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
