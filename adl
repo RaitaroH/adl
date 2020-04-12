@@ -11,6 +11,7 @@
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
 ##   -r, --retrieve    Run trackma retrieve to update local list
 ##   -d, --download    Download instead of streaming
+##   -l, --local       Use local files instead of streaming
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -u, --update      Update this script from github master;
@@ -57,7 +58,7 @@ trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
 print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -12 ;}
+print_options()   { print_help | tail -13 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
@@ -455,8 +456,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:s:n:a:yrdf \
-                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,frece \
+if ! params="$(getopt -o vhup:s:n:a:yrdlf \
+                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,local,frece \
                       --name "$0" -- "$@")"; then print_options; exit 1; fi
 eval set -- "$params"
 
@@ -473,6 +474,7 @@ while true; do
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -d|--download)   download="1"  ;; # Download instead of streaming
+    -l|--local)      local="1"     ;; # Use local files instead of streaming
     -f|--frece)      use_frece="1" ;;
     --) shift; break ;; # exit loop
   esac
