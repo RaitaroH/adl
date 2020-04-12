@@ -17,6 +17,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + prompt user to add a score to an anime if the anime in question will be set as completed;
 + option to skip all user input - works in combination with the other options as well;
 + download instead of watching; everything from above still applies;
++ use local media instead of streaming. Requires identical folder name to anilist anime title;
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
