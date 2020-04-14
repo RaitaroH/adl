@@ -257,7 +257,6 @@ watch() { #{{{
       watching_prompt "$title" "starting with episode" "#1"
       animedl "$player" "$title" ;;
     "i"|"I")
-      no_update=1
       color_prompt "Starting episode of episodes range: "
       read -r interval_start
       color_prompt "Last episode of episodes range: "
