@@ -158,7 +158,8 @@ animedl() { #{{{
   color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
 
   if [ "$local" == "0" ]; then
-    [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
+    #-c 0 used to mean nothing, so instead pass skip-download which will mean nothing
+    [[ -z "$yes" ]] && choice="--skip-download" || choice="-c 1"
 
     # I can't seem to get anime dl to work unless I use a function like this
     player_arg="$1"
