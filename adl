@@ -74,7 +74,7 @@ get_list()        { #{{{
   tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
-  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g ; s/\ [0-9][0-9][0-9][0-9]/\ &/ ; s/\ [0-9][0-9][0-9]/\ &/' |\
   awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
 }
 # {{{
