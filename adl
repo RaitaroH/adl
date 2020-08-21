@@ -9,8 +9,9 @@
 ##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018";
 ##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
-##   -r, --retrieve    Run trackma retrieve to update local list
-##   -d, --download    Download instead of streaming
+##   -r, --retrieve    Run trackma retrieve to update local list;
+##   -d, --download    Download instead of streaming;
+##   -l, --local       Use local files instead of streaming. Define folder to be used for local as argument;
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -u, --update      Update this script from github master;
@@ -28,6 +29,14 @@ account="1"
 retrieve=""
 download="0"
 ctrlc="0"
+# For local anime viewing define directory and change local to 1
+local="0"
+animedir=""
+
+# An array of anime that end with a fullstop/period/dot
+# required for trackma updating
+declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato")
+
 check_player() { #{{{
   # Exit if "$player" is not installed
   if ! [ -x "$(command -v $player)" ]; then
@@ -49,7 +58,7 @@ trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
 print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -12 ;}
+print_options()   { print_help | tail -13 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
@@ -146,23 +155,51 @@ select_function() { #{{{
 animedl() { #{{{
   # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
   trap "trap_ctrlc" 2
+  color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
 
-  [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
+  if [ "$local" == "0" ]; then
+    [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
 
-  # I can't seem to get anime dl to work unless I use a function like this
-  player_arg="$1"
-  down_arg() { [[ "$download" == "0" ]] && echo "--play $player_arg" || echo "" ;}
+    # I can't seem to get anime dl to work unless I use a function like this
+    player_arg="$1"
+    down_arg() { [[ "$download" == "0" ]] && echo "--play $player_arg" || echo "" ;}
 
-  if [[ "$4" != "" ]]; then
-    { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
-    return 1
-  else
-    if [[ "$3" != "" ]]; then
-      { out=$(anime dl $(down_arg) "$2" --episodes "$3" "$choice" | tee >(cat - >&5)); } 5>&1
+    if [[ "$4" != "" ]]; then
+      { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
       return 1
     else
-      { out=$(anime dl $(down_arg) "$2" "$choice" | tee >(cat - >&5)); } 5>&1
+      if [[ "$3" != "" ]]; then
+        { out=$(anime dl $(down_arg) "$2" --episodes "$3" "$choice" | tee >(cat - >&5)); } 5>&1
+        return 1
+      else
+        { out=$(anime dl $(down_arg) "$2" "$choice" | tee >(cat - >&5)); } 5>&1
+        return 1
+      fi
+    fi
+  else
+    # instead of streaming, play from local media
+    # this obviously requires identical folder names to ones on anilist
+    if [[ "$4" != "" ]]; then
+      list=""; out="";
+      # get all anime episodes in one variable, on new lines
+      for i in $(seq "$3" "$4"); do
+        list+="$(find "$animedir/$2/" -type f -name "*$i*" | sort | fzf -e)\n"
+      done
+      # for each line open mpv
+      while IFS= read -r line; do
+        if [ "$ctrlc" = 0 ]; then
+          { out+=$($player "$line" | tee >(cat - >&5)); } 5>&1
+        else return 1; fi
+      done <<< $(echo -e $list)
       return 1
+    else
+      if [[ "$3" != "" ]]; then
+        { out=$($1 "$(find "$animedir/$2/" -type f -name "*$3*" | sort | fzf -e)" | tee >(cat - >&5)); } 5>&1
+        return 1
+      else
+        { out=$($1 "$(find "$animedir/$2/" -type f | sort | fzf -e)" | tee >(cat - >&5)); } 5>&1
+        return 1
+      fi
     fi
   fi
 } #}}}
@@ -175,6 +212,9 @@ watch() { #{{{
   [[ "$last" == "?" ]] && last=$((nr + 12))
 
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
+
+  # test if an anime title has a period at the end or not. If yes add one
+  for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
 
   echo "$title > $((nr-1)) / $last"
 
@@ -194,6 +234,7 @@ watch() { #{{{
     fi
   else ans_episode="r"
   fi
+  no_update=0
   case $ans_episode in
     ""|"n"|"N")
       watching_prompt "$title" "episode" "#$nr"
@@ -223,10 +264,12 @@ watch() { #{{{
       watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
       animedl "$player" "$title" "$interval_start" "$interval_stop" ;;
     "r"|"R")
+      no_update=1
       nr=$((nr - 1))
       watching_prompt "$title" "episode" "#$nr"
       animedl "$player" "$title" "$nr" ;;
     "c"|"C")
+      no_update=1
       color_prompt "Enter custom number: "
       read -r nr
       watching_prompt "$title" "episode" "#$nr"
@@ -234,6 +277,7 @@ watch() { #{{{
     "u"|"U")
       color_print "\nSkipping watching episodes. Modifing entry."
       color_prompt "Update episode number or update score [E/s]: "
+
       read -r ans_modify
       case $ans_modify in
         ""|"e"|"E")
@@ -265,7 +309,7 @@ watch() { #{{{
     "vlc")
       watched=$(echo "$out" | grep -c 'Command Line Interface initialized') ;;
     "mpv")
-      watched=$(echo "$out" | grep -c 'fps') ;;
+      watched=$(echo "$out" | grep -c 'Exiting') ;;
     *)
       watched=1 ;;
   esac
@@ -279,11 +323,15 @@ watch() { #{{{
     color_prompt "\n\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
-    fi
+  fi
+
+    # test if an anime title has a period at the end or not. If yes add one
+    for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+
     case $ans_update in
       ""|"y"|"Y")
-        [[ $ans_episode = "r" ]] || [[ $ans_episode = "R" ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
-        [[ $watched -gt 1 ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
+        [[ $no_update == 1 ]] && color_print "No need to update..." && return 0 #exit if option r/R was used before
+        [[ $watched -gt 1  ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1))
         if [[ $last == "?" ]]; then
            trackma -a "$account" update "$title" "$nr"
         else
@@ -407,8 +455,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:s:n:a:yrdf \
-                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,frece \
+if ! params="$(getopt -o vhup:s:n:a:yrdl:f \
+                      -l version,help,update,player:,show:,number:,account:,no-confirm,retrieve,download,local:,frece \
                       --name "$0" -- "$@")"; then print_options; exit 1; fi
 eval set -- "$params"
 
@@ -425,6 +473,7 @@ while true; do
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -d|--download)   download="1"  ;; # Download instead of streaming
+    -l|--local)      arguments "$opt" "$2" animedir; local=1 ;; # Use local media instead of streaming
     -f|--frece)      use_frece="1" ;;
     --) shift; break ;; # exit loop
   esac
