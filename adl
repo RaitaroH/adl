@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version: 2.4.8
+## Version: 2.5.0
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage: https://github.com/RaitaroH/adl
 ## Usage: $ adl [Option...] [Command]...
@@ -74,7 +74,7 @@ get_list()        { #{{{
   tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
-  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g' |\
+  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g ; s/\ [0-9][0-9][0-9][0-9]/\ &/ ; s/\ [0-9][0-9][0-9]/\ &/' |\
   awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
 }
 # {{{
@@ -158,7 +158,8 @@ animedl() { #{{{
   color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
 
   if [ "$local" == "0" ]; then
-    [[ -z "$yes" ]] && choice="-c 0" || choice="-c 1" #0 is as if is not even there
+    #-c 0 used to mean nothing, so instead pass skip-download which will mean nothing
+    [[ -z "$yes" ]] && choice="--skip-download" || choice="-c 1"
 
     # I can't seem to get anime dl to work unless I use a function like this
     player_arg="$1"
@@ -224,11 +225,12 @@ watch() { #{{{
       L - from current to Last known
       A - All available, from episode 1
       I - custom Interval (range) of episodes
+      P - Plus n episodes relative to last seen
       R - Rewatch/redownload current episode in list
       C - Custom episode
       U - Update entry chosen instead of streaming
       S - Skip. Choose another show."
-    color_prompt "Your choice? [N/l/a/i/r/c/u/s]: "
+    color_prompt "Your choice? [N/l/a/i/p/r/c/u/s]: "
     if [[ -z "$yes" ]]; then read -r ans_episode
     else ans_episode="" ; print_noconfirm
     fi
@@ -263,6 +265,11 @@ watch() { #{{{
       read -r interval_stop
       watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
       animedl "$player" "$title" "$interval_start" "$interval_stop" ;;
+    "p"|"P")
+      color_prompt "How many episodes to watch: "
+      read -r plus_start
+      watching_prompt "$title" "episodes" "#$nr to #$((plus_start + nr - 1))"
+      animedl "$player" "$title" "$nr" "$((plus_start + nr - 1))" ;;
     "r"|"R")
       no_update=1
       nr=$((nr - 1))
