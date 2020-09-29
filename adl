@@ -74,18 +74,12 @@ get_list()        { #{{{
   tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
-  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g ; s/\ [0-9][0-9][0-9][0-9]/\ &/ ; s/\ [0-9][0-9][0-9]/\ &/' |\
-  awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
+  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.[^\.]*)\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d+).+$/\1|\2|\3|\4|/g'
 }
 # {{{
 # Entry manipulation explination ...
-# sed is removing color formating and everything untill the first letter it finds
-# NR>1 ignore first line which is the header
-# $1 is the title plus dots ... split allows to remove the dots, sets new result to var t
-# $2 is Current / All episodes split allows to get the current episode number
-# gsub thingy is to remove beggining space " 2" from one digit numbers
-# $1=$2="" clears these two and prints $0 which prints $3, $4... Needed for x.x scores
-# finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
+# \x1b is removing color formating and everything untill the first letter it finds
+# the rest is a regexp; the \n are references: \1=title | \2=current ep | \3=all ep | \4=score |
 # }}}
 
 select_function() { #{{{
