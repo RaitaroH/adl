@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-## Version: 2.5.0
+## Version:\033[0;35m 2.5.0 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
-## Homepage: https://github.com/RaitaroH/adl
-## Usage: $ adl [Option...] [Command]...
-## Options:
-##   -p, --player      Define player used for streaming. Ex: $adl -p mpv;
-##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: $adl -s "gegege 2018";
-##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: $adl -s "gegege 2018" -n "4";
+## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
+## Usage:\033[0;36m $adl [Option...] [Command...] \033[0m
+## \033[1;33mOptions:\033[0m
+##   -p, --player      Define player used for streaming. Ex: \033[0;36m$adl -p mpv\033[0m;
+##   -s, --show        Watch custom show. Ep nr optional, careful with the quotes. Ex: \033[0;36m$adl -s "gegege 2018"\033[0m;
+##   -n, --number      Specify episode number that will be used with '-s / --show' option. Ex: \033[0;36m$adl -s "gegege 2018" -n "4"\033[0m;
 ##   -y, --no-confirm  Assume default option for all promts, except watch another anime. Requires anime-downloader git/master;
 ##   -r, --retrieve    Run trackma retrieve to update local list;
 ##   -d, --download    Download instead of streaming;
@@ -57,7 +57,7 @@ check_frece() { #{{{
 trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
-print_help()      { sed -n "s/##\ //p" "$0" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
+print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_options()   { print_help | tail -13 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
@@ -74,18 +74,12 @@ get_list()        { #{{{
   tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
-  sed 's/\x1b\[[0-9;]*m//g ; s/^[^A-Za-z]* //g ; s/\ [0-9][0-9][0-9][0-9]/\ &/ ; s/\ [0-9][0-9][0-9]/\ &/' |\
-  awk -F'  ' '{split($1,t,"."); gsub(" ", "", $2); split($2,n,"/"); $1=$2=""; gsub(" ", "", $0); print t[1]"|"n[1]"|"n[2]"|"$0}'
+  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.[^\.]*)\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d+).+$/\1|\2|\3|\4|/g'
 }
 # {{{
 # Entry manipulation explination ...
-# sed is removing color formating and everything untill the first letter it finds
-# NR>1 ignore first line which is the header
-# $1 is the title plus dots ... split allows to remove the dots, sets new result to var t
-# $2 is Current / All episodes split allows to get the current episode number
-# gsub thingy is to remove beggining space " 2" from one digit numbers
-# $1=$2="" clears these two and prints $0 which prints $3, $4... Needed for x.x scores
-# finally print t[1] = title and n[1] current episode number: result is like so:    Animu|x
+# \x1b is removing color formating and everything untill the first letter it finds
+# the rest is a regexp; the \n are references: \1=title | \2=current ep | \3=all ep | \4=score |
 # }}}
 
 select_function() { #{{{
