@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 2.5.1 \033[0m
+## Version:\033[0;35m 2.5.2 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Command...] \033[0m
@@ -209,7 +209,7 @@ watch() { #{{{
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
 
   # test if an anime title has a period at the end or not. If yes add one
-  for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+  for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
 
   echo "$title > $((nr-1)) / $last"
 
@@ -327,7 +327,7 @@ watch() { #{{{
   fi
 
     # test if an anime title has a period at the end or not. If yes add one
-    for t in $exceptions; do [ "$title" == "$t" ] && title="${title}."; done
+    for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
 
     case $ans_update in
       ""|"y"|"Y")
