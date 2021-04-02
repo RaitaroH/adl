@@ -153,21 +153,21 @@ animedl() { #{{{
 
   if [ "$local" == "0" ]; then
     #-c 0 used to mean nothing, so instead pass skip-download which will mean nothing
-    [[ -z "$yes" ]] && choice="--skip-download" || choice="-c 1"
+    choice_arg() { [[ -z "$yes" ]] && echo "" || echo "-c 1" ;}
 
     # I can't seem to get anime dl to work unless I use a function like this
     player_arg="$1"
     down_arg() { [[ "$download" == "0" ]] && echo "--play $player_arg" || echo "" ;}
 
     if [[ "$4" != "" ]]; then
-      { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" "$choice" | tee >(cat - >&5)); } 5>&1
+      { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) | tee >(cat - >&5)); } 5>&1
       return 1
     else
       if [[ "$3" != "" ]]; then
-        { out=$(anime dl $(down_arg) "$2" --episodes "$3" "$choice" | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl $(down_arg) "$2" --episodes "$3" $(choice_arg) | tee >(cat - >&5)); } 5>&1
         return 1
       else
-        { out=$(anime dl $(down_arg) "$2" "$choice" | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl $(down_arg) "$2" $(choice_arg) | tee >(cat - >&5)); } 5>&1
         return 1
       fi
     fi
