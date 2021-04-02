@@ -309,7 +309,7 @@ watch() { #{{{
   case $player in
     "vlc")
       watched=$(echo "$out" | grep -c 'Command Line Interface initialized') ;;
-    "mpv")
+    "mpv"|"mplayer")
       watched=$(echo "$out" | grep -c 'Exiting') ;;
     *)
       watched=1 ;;
