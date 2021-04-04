@@ -310,7 +310,7 @@ watch() { #{{{
     "vlc")
       watched=$(echo "$out" | grep -c 'Command Line Interface initialized') ;;
     "mpv"|"mplayer")
-      watched=$(echo "$out" | grep -c 'Exiting') ;;
+      watched=$(echo "$out" | grep -c 'Exiting... (Quit)') ;;
     *)
       watched=1 ;;
   esac
