@@ -74,7 +74,7 @@ get_list()        { #{{{
   tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
 } #}}}
 process_list()    {
-  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.[^\.]*)\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d+).+$/\1|\2|\3|\4|/g'
+  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|/g'
 }
 # {{{
 # Entry manipulation explination ...
