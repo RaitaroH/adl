@@ -385,7 +385,7 @@ watch() { #{{{
     esac
   done
 
-  if [[ -z "$2" && "$download" == "0" ]]; then #only ask if anime is in list, only if streaming, no python errors
+  if [[ -z "$2" && "$download" == "0" && "$provider_ans" != "n" ]]; then #only ask if anime is in list, only if streaming, no python errors
     color_prompt "\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
     if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
