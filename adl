@@ -217,20 +217,18 @@ animedl() { #{{{
     "mpv"|"mplayer")
       watched=$((watched + $(echo "$out" | grep -c 'Exiting... (Quit)') ))
       # consider possible errors
-      err=$(echo "$out" | grep -c 'Errors when loading file')
+      err=$(echo "$out" | grep -c -E 'Errors when loading file|ERROR')
       [[ "$err" != "0" ]] && watched=$((watched - err))
       ;;
     *)
       watched=$((watched + 1)) ;;
   esac
   # check if anime downloader threw an error
-  if echo "$out" | grep -q "ERROR"; then
-    err=$((err + 1))
-  fi
   if echo "$out" | grep -q "Aborted!"; then
     ctrlc="1"
   fi
   [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
+  [[ "$watched" -lt 0 ]] && watched=0 ;
 } #}}}
 
 watch() { #{{{
