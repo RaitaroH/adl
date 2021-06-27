@@ -349,9 +349,9 @@ watch() { #{{{
           color_print "Skipping different provider retry..."
           provider_ans="n" ;;
         *)
-          reset_vars
           provider="$provider_ans"
           color_print "Now trying $provider. $0 will remember this.\n"
+          reset_vars
           animedl "$player" "$title" $(echo "$animedl_args")
           ;;
       esac
