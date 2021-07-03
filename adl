@@ -39,6 +39,7 @@ animedir=""
 reset_vars() { #{{{
   ctrlc="0" #making sure this counter is reset
   err="0"
+  ferr="0"
   show_title=""
   show_episode=""
   provider_ans=""
@@ -228,6 +229,9 @@ animedl() { #{{{
     ctrlc="1"
   fi
   [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
+  if echo "$out" | grep -q "No such file or directory"; then
+    ferr="1"
+  fi
   [[ "$watched" -lt 0 ]] && watched=0 ;
 } #}}}
 
@@ -237,6 +241,7 @@ watch() { #{{{
    last="$(echo "$1" | cut -d'|' -f3)"
   score="$(echo "$1" | cut -d'|' -f4)"
   [[ "$last" == "?" ]] && last=$((nr + 12))
+  sent=""
 
   [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
 
@@ -340,7 +345,7 @@ watch() { #{{{
   esac
 
   while true; do
-    if [[ "$watched" == "0" && "$ctrlc" == "0" && "$download" == "0" ]]; then
+    if [[ "$watched" == "0" && "$ctrlc" == "0" && "$download" == "0" && "$local" == "0" ]]; then
       color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..."
       color_prompt "Try another provider? [N / provider name]: "
       read -r provider_ans
@@ -358,7 +363,7 @@ watch() { #{{{
     fi
 
   # Continue watching
-    if [[ -z "$yes" && "$ctrlc" == "0" && "$provider_ans" != "n" ]]; then
+    if [[ -z "$yes" && "$ctrlc" == "0" && "$provider_ans" != "n" && "$ferr" != "1" && "$((watched+nr-1))" != "$last" ]]; then
       [[ "$download" == "0" ]] && var="watch" || var="download";
       color_prompt "\nWant to further $var the anime? Enter number for ep. count, [N/0-9]: "
       read -r ans_continue
@@ -372,7 +377,6 @@ watch() { #{{{
         reset_vars
         # animedl_args will be either '[0-9] [0-9]' or '[0-9]'; get last number
         animedl_last=$(echo "$animedl_args" | awk '{print $NF}')
-        echo "$animedl_args, $animedl_last"
         # last was done, so continue from last+1
         if [[ $ans_continue -gt 1 ]]; then
           watching_prompt "$title" "episodes" "#$((animedl_last + 1)) to #$((animedl_last + ans_continue))"
