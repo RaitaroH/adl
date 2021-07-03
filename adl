@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 2.6.0 \033[0m
+## Version:\033[0;35m 2.6.1 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
