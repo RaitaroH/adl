@@ -385,7 +385,7 @@ watch() { #{{{
 
   #only ask if anime is in list, only if streaming, only if there is something to even update
   if [[ -z "$2" && "$download" == "0" && "$watched" -gt 0 && "$provider_ans" != "n" ]]; then
-    color_prompt "\nIncrease nr in anime list? Yes, no, or custom number [Y/n/c]: "
+    echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/c]: \033[0m"
     if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
     fi
@@ -396,7 +396,7 @@ watch() { #{{{
     case $ans_update in
       ""|"y"|"Y")
         [[ $no_update == 1 ]] && color_print "No need to update..." && return 0; #exit if option r/R was used before
-        [[ $watched -gt 1  ]] && color_print "\nadl counted $watched episodes that have been watched." && nr=$((watched + nr - 1));
+        [[ "$watched" -gt 1  ]] && nr=$((watched + nr - 1));
         if [[ $last == "?" ]]; then
            trackma -a "$account" update "$title" "$nr"
         else
@@ -468,13 +468,12 @@ watch_another() { #{{{
       read -r ans_another
     else ans_another="n"
     fi
-    echo
     case $ans_another in
       ""|"y"|"Y")
-        [[ -z "$sent" ]] || color_print "\nRetrieving updated anime list...\n" && get_list
+        [[ -z "$sent" ]] || color_print "Retrieving updated anime list...\n" && get_list
         select_function ;;
       "n"|"N")
-        color_print "Skipping watching another...\n"
+        color_print "Skipping watching another..."
         ;;
         # return 0 ;;
     esac
