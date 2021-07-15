@@ -281,10 +281,11 @@ animedl() { #{{{
   if echo "$out" | grep -q "Aborted!"; then
     ctrlc="1"
   fi
-  [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
   if echo "$out" | grep -q "No such file or directory"; then
     ferr="1"
   fi
+  # it seems like this decrease is not needed anymore
+  # [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
   [[ "$watched" -lt 0 ]] && watched=0 ;
 } #}}}
 
