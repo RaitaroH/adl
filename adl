@@ -187,11 +187,12 @@ animedl() { #{{{
   else
     # instead of streaming, play from local media
     # this obviously requires identical folder names to ones on anilist
+    fzf_hint() { fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $1'" --preview-window "up,5%" ;}
     if [[ "$4" != "" ]]; then
       list=""; out="";
       # get all anime episodes in one variable, on new lines
       for i in $(seq "$3" "$4"); do
-        list+="$(find "$animedir/$2/" -type f -name "*$i*" | sort | fzf -e)\n"
+        list+="$(find "$animedir/$2/" -type f -name "*$i*" | sort | fzf_hint "$i")\n"
       done
       # for each line open mpv
       while IFS= read -r line; do
@@ -202,10 +203,10 @@ animedl() { #{{{
       done <<< $(echo -e $list)
     else
       if [[ "$3" != "" ]]; then
-        { out=$($1 "$(find "$animedir/$2/" -type f -name "*$3*" | sort | fzf -e)" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(find "$animedir/$2/" -type f -name "*$3*" | sort | fzf_hint "$3")" | tee >(cat - >&5)); } 5>&1
         animedl_args="$3"
       else
-        { out=$($1 "$(find "$animedir/$2/" -type f | sort | fzf -e)" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(find "$animedir/$2/" -type f | sort | fzf_hint "unspecified")" | tee >(cat - >&5)); } 5>&1
         animedl_args=""
       fi
     fi
