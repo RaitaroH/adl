@@ -66,6 +66,15 @@ check_frece() { #{{{
   fi
   clear
 } #}}}
+check_covers() { #{{{
+  if ! [ -x "$(command -v ueberzug)" ] || [ -x "$(command -v adl_covers)" ]; then
+    echo "Error: Covers are not supported. Check homepage for details, or not use covers." >&2
+    print_help | grep "http"
+    print_options
+    exit 1
+  fi
+  clear
+} #}}}
 trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
@@ -94,12 +103,56 @@ process_list()    {
 # the rest is a regexp; the \n are references: \1=title | \2=current ep | \3=all ep | \4=score |
 # }}}
 
+# Covers functions using ueberzug {{{
+# https://github.com/seebye/ueberzug/blob/master/examples/fzfimg.sh
+UEBERZUG_FIFO="$(mktemp --dry-run --suffix "fzf-$$-ueberzug")"
+declare -r -x UEBERZUG_FIFO
+start_ueberzug() {
+  mkfifo "${UEBERZUG_FIFO}"
+  <"${UEBERZUG_FIFO}" \
+      ueberzug layer --parser bash --silent &
+  # prevent EOF
+  3>"${UEBERZUG_FIFO}" \
+      exec
+}
+draw_preview() {
+  img=$(echo "${@}" | perl -pe "s/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1/g")
+  [[ ! -e "/tmp/$img.png" ]] && adl_covers.py "$img"
+  [ "$LINES" -gt '25' ] && ht="50%" || ht="100%"
+
+  >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
+      [action]=add [identifier]="preview" \
+      [x]="2" [y]="1" \
+      [width]="$((COLUMNS-2))" [height]="$((LINES-3))" \
+      [scaler]=fit_contain [scaling_position_x]=0.5 [scaling_position_y]=0.5 \
+      [path]="/tmp/$img.png")
+      # add [synchronously_draw]=True if you want to see each change
+}
+set_fzf_covers() {
+  if [[ "$covers" == "1" ]]; then
+    check_covers
+    export -f draw_preview
+    fzf_select() {
+      start_ueberzug
+      fzf --ansi --reverse -m --prompt "Multi-select with tab/shift-tab: "\
+          --preview "draw_preview {}" --preview-window "left,20%"
+      pkill ueberzug
+      rm "${UEBERZUG_FIFO}"
+    }
+  else
+    fzf_select() {
+      fzf --ansi --reverse -m --prompt "Multi-select with tab/shift-tab: " \
+          --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+    }
+  fi
+}
+# }}}
+
 select_function() { #{{{
   # Retrieve title and nr. Parse file only once
   if [[ -z "$1" ]]; then
     if [[ -z "$use_frece" ]]; then
-      entry="$(echo "$tlist" | fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
-      entry="$(echo "$entry" | process_list)"
+      entry="$(echo "$tlist" | fzf_select | process_list)"
       present=""
     else
       check_frece
@@ -127,8 +180,7 @@ select_function() { #{{{
         while IFS= read -r line ; do
           [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
           echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
-          ((line_number++)); done | \
-            fzf --ansi --reverse -m --prompt 'Multi-select with tab/shift-tab: ')"
+          ((line_number++)); done | fzf_select)"
       echo "$choice" | process_list | \
         while IFS= read -r line ; do
           echo "$line" >> "$ENTRIES_FILE" # reuse this file
@@ -523,8 +575,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:i:s:n:a:yrdl:f \
-                      -l version,help,update,player:,provider:,show:,number:,account:,no-confirm,retrieve,download,local:,frece \
+if ! params="$(getopt -o vhup:i:s:n:a:yrdl:fc \
+                      -l version,help,update,player:,provider:,show:,number:,account:,no-confirm,retrieve,download,local:,frece,covers \
                       --name "$0" -- "$@")"; then print_options; exit 1; fi
 eval set -- "$params"
 
@@ -544,12 +596,14 @@ while true; do
     -d|--download)   download="1"  ;; # Download instead of streaming
     -l|--local)      arguments "$opt" "$2" animedir; local=1 ;; # Use local media instead of streaming
     -f|--frece)      use_frece="1" ;;
+    -c|--covers)     covers="1" ;;
     --) shift; break ;; # exit loop
   esac
   shift
 done
 
 check_player
+set_fzf_covers
 get_list
 if [[ -z "$show_title" ]]; then select_function
 else show_function "$show_title" "$show_episode"
