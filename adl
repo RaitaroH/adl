@@ -105,6 +105,14 @@ process_list()    {
 
 # Covers functions using ueberzug {{{
 # https://github.com/seebye/ueberzug/blob/master/examples/fzfimg.sh
+adl_covers() {
+  # for a python way, check the homepage
+  url=$(curl "https://graphql.anilist.co" \
+    --silent -X POST -H 'content-type: application/json' -H 'accept: application/json' \
+    --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$1\"}}")
+  url=$(echo "$url" | sed -n 's/\\//g; s/.*"\(http.*\)".*/\1/p')
+  wget --quiet "$url" -O "/tmp/$1.png"
+}
 UEBERZUG_FIFO="$(mktemp --dry-run --suffix "fzf-$$-ueberzug")"
 declare -r -x UEBERZUG_FIFO
 start_ueberzug() {
@@ -117,8 +125,7 @@ start_ueberzug() {
 }
 draw_preview() {
   img=$(echo "${@}" | perl -pe "s/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1/g")
-  [[ ! -e "/tmp/$img.png" ]] && adl_covers.py "$img"
-  [ "$LINES" -gt '25' ] && ht="50%" || ht="100%"
+  [ ! -e "/tmp/$img.png" ] && adl_covers "$img"
 
   >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
       [action]=add [identifier]="preview" \
@@ -132,6 +139,7 @@ set_fzf_covers() {
   if [[ "$covers" == "1" ]]; then
     check_covers
     export -f draw_preview
+    export -f adl_covers
     fzf_select() {
       start_ueberzug
       fzf --ansi --reverse -m --prompt "Multi-select with tab/shift-tab: "\
