@@ -442,8 +442,8 @@ watch() { #{{{
   done
 
   #only ask if anime is in list, only if streaming, only if there is something to even update
-  if [[ -z "$2" && "$download" == "0" && "$watched" -gt 0 && "$provider_ans" != "n" && "$no_update" != "1" ]]; then
-    echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/c]: \033[0m"
+  if [[ -z "$2" && "$download" == "0" && "$watched" -gt 0 && "$no_update" != "1" ]]; then
+    echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
     if [[ -z "$yes" ]]; then read -r ans_update
     else ans_update="" ; print_noconfirm
     fi
@@ -472,10 +472,8 @@ watch() { #{{{
         sent=""
         color_print "Skipping..."
         ;;
-      "c"|"C")
-        color_print "Enter custom number:"
-        read -r custom
-        trackma -a "$account" update "$title" "$custom"
+      *[0-9]*)
+        trackma -a "$account" update "$title" "$ans_update"
         trackma -a "$account" send
         sent="1"
         ;;
