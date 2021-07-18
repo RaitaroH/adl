@@ -16,6 +16,7 @@
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
 ##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
 ##   -u, --update      Update this script from github master;
+##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -67,9 +68,8 @@ check_frece() { #{{{
   clear
 } #}}}
 check_covers() { #{{{
-  if ! [ -x "$(command -v ueberzug)" ] || [ -x "$(command -v adl_covers)" ]; then
-    echo "Error: Covers are not supported. Check homepage for details, or not use covers." >&2
-    print_help | grep "http"
+  if ! [ -x "$(command -v ueberzug)" ]; then
+    echo "Error: Cannot display covers due to missing package 'ueberzug'." >&2
     print_options
     exit 1
   fi
@@ -79,7 +79,7 @@ trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -14 ;}
+print_options()   { print_help | tail -15 ;}
 print_version()   { print_help | head -2  ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
