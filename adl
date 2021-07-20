@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 2.6.6 \033[0m
+## Version:\033[0;35m 2.6.7 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -481,7 +481,7 @@ watch() { #{{{
         color_print "Skipping..."
         ;;
       *[0-9]*)
-        trackma -a "$account" update "$title" "$ans_update"
+        trackma -a "$account" update "$title" "$((nr + ans_update - 1))"
         trackma -a "$account" send
         sent="1"
         ;;
