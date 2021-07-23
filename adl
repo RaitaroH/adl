@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 2.6.7 \033[0m
+## Version:\033[0;35m 2.6.8 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -142,14 +142,14 @@ set_fzf_covers() {
     export -f adl_covers
     fzf_select() {
       start_ueberzug
-      fzf --ansi --reverse -m --prompt "Multi-select with tab/shift-tab: "\
+      fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: "\
           --preview "draw_preview {}" --preview-window "left,20%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse -m --prompt "Multi-select with tab/shift-tab: " \
+      fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: " \
           --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
