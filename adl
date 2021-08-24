@@ -279,8 +279,8 @@ animedl() { #{{{
     "mpv"|"mplayer")
       watched=$((watched + $(echo "$out" | grep -c 'Exiting... (Quit)') ))
       # consider possible errors
-      err=$(echo "$out" | grep -c -E 'Errors when loading file|ERROR')
-      [[ "$err" != "0" ]] && watched=$((watched - err))
+      # err=$(echo "$out" | grep -c -E 'Errors when loading file|ERROR')
+      # [[ "$err" != "0" ]] && watched=$((watched - err))
       ;;
     *)
       watched=$((watched + 1)) ;;
