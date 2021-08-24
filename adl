@@ -248,11 +248,15 @@ animedl() { #{{{
     # instead of streaming, play from local media
     # this obviously requires identical folder names to ones on anilist
     fzf_hint() { fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $1'" --preview-window "up,5%" ;}
+    _find_files() { # this is to exclude sub files;
+      find "$1" -type f \( -name "*.srt" -o -name "*.ass" \) -prune \
+      -o -type f -name "$2" -print | sort | fzf_hint "$3"
+    }
     if [[ "$4" != "" ]]; then
       list=""; out="";
       # get all anime episodes in one variable, on new lines
       for i in $(seq "$3" "$4"); do
-        list+="$(find "$animedir/$2/" -type f -name "*$i*" | sort | fzf_hint "$i")\n"
+        list+="$(_find_files "$animedir/$2/" "*$i*" "$i")\n"
       done
       # for each line open mpv
       while IFS= read -r line; do
@@ -263,10 +267,10 @@ animedl() { #{{{
       done <<< $(echo -e $list)
     else
       if [[ "$3" != "" ]]; then
-        { out=$($player "$(find "$animedir/$2/" -type f -name "*$3*" | sort | fzf_hint "$3")" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(_find_files "$animedir/$2/" "*$3*" "$3")" | tee >(cat - >&5)); } 5>&1
         animedl_args="$3"
       else
-        { out=$($player "$(find "$animedir/$2/" -type f | sort | fzf_hint "unspecified")" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(_find_files "$animedir/$2/" "*" "unspecified")" | tee >(cat - >&5)); } 5>&1
         animedl_args=""
       fi
     fi
