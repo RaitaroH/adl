@@ -247,8 +247,6 @@ animedl() { #{{{
     player_arg="$1"
     down_arg()     { [[ "$download" == "0" ]] && echo "--play $player_arg"   || echo "" ;}
     provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "--provider animerush" ;} # setting default provider to animerush because it gives far better results
-    echo $(provider_arg)
-    read
     if [[ "$4" != "" ]]; then
       { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
       animedl_args="$3 $4" # remember episode numbers for provider retry
@@ -627,9 +625,6 @@ while true; do
     -c|--covers)     covers="1" ;;
     --) shift; break ;; # exit loop
   esac
-  if [["$provider" == ""]];then 
-    provider="animerush"
-  fi
   shift
 done
 
