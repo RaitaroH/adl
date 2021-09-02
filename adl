@@ -33,6 +33,7 @@ retrieve=""
 download="0"
 ctrlc="0"
 watched="0"
+windows_specific_cmd="ipconfig" # you can change it to any windows specific command
 # For local anime viewing define directory and change local to 1
 local="0"
 animedir=""
@@ -51,12 +52,27 @@ reset_vars() { #{{{
 declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou")
 
 check_player() { #{{{
-  # Exit if "$player" is not installed
-  if ! [ -x "$(command -v $player)" ]; then
-    echo "Error: '$player' is not installed." >&2
-    print_options
-    exit 1
+  # Check platform and Exit if "$player" is not installed
+  if ! [ -x "$(command -v $windows_specific_cmd)" ]; then
+    echo "Platform:Linux"
+    if ! [ -x "$(command -v $player)" ]; then
+      echo "Error: '$player' is not installed." >&2
+      print_options
+      exit 1
+    fi
+  else 
+    echo "Platform:Windows"
+    start player_check.bat
+    player_bool=`cat player_bool`
+    if [[ $player_bool -eq 0 ]]; then
+      echo "Error: '$player' is not installed." >&2
+      print_options
+      exit 1
+    fi
+    rm -rf player_bool
   fi
+  
+
   clear
 } #}}}
 check_frece() { #{{{
@@ -150,7 +166,7 @@ set_fzf_covers() {
   else
     fzf_select() {
       fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: " \
-          --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+            --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
 }
@@ -230,8 +246,9 @@ animedl() { #{{{
     choice_arg()   { [[ -z "$yes" ]] && echo "" || echo "-c 1" ;}
     player_arg="$1"
     down_arg()     { [[ "$download" == "0" ]] && echo "--play $player_arg"   || echo "" ;}
-    provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
-
+    provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "--provider animerush" ;} # setting default provider to animerush because it gives far better results
+    echo $(provider_arg)
+    read
     if [[ "$4" != "" ]]; then
       { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
       animedl_args="$3 $4" # remember episode numbers for provider retry
@@ -569,7 +586,7 @@ updater() { #{{{
           color_print "Not an actual option. Exiting..."
           exit 1 ;;
       esac
-      color_print "\n✓ Update from $source is complete." ;;
+      color_print "\n✓ Update from branch master is complete." ;;
     ""|"n"|"N")
       color_print "Update aborted." ;;
     *)
@@ -610,6 +627,9 @@ while true; do
     -c|--covers)     covers="1" ;;
     --) shift; break ;; # exit loop
   esac
+  if [["$provider" == ""]];then 
+    provider="animerush"
+  fi
   shift
 done
 
