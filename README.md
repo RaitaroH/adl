@@ -45,7 +45,8 @@ refreshenv
 pip install -U git+https://github.com/anime-dl/anime-downloader Trackma
 ```
 **If you already have trackma Setup,then skip following step**
-+ Now we need to setup trackma,which is pretty straight-forward.type trackma in cmd/powershell.type a to add an account.now type the site that you want to connect trackma with(i.e:anilist,etc).after entering your user-name you will be given a link
++ Now we need to setup trackma,which is pretty straight-forward.type trackma in cmd/powershell.type a to add an account.now type the site that you want to connect trackma with(i.e:anilist,etc).after entering your user-name you will be given a link,paste that link in the browser and give permissions to trackma.you will be given a pin,copy that pin and paste it in the prommpt asking for the pin.trackma has been initialized at this point.
+**if you update any list on anilist or any other site,then you will have to update it in trackma using the ```retrieve``` command.**
 #### Linux
 Simply download the script in your `~/bin` folder and make it executable.
 
