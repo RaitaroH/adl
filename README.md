@@ -64,7 +64,8 @@ otherwise if you didn't add the directory on PATH ,then
 "Installation Dir\Git\bin\bash.exe" .\adl
 ```
 ### Linux
-Simply download the script in your `~/bin` folder and make it executable.
++ Install all the dependencies from above.
++ Simply download the script in your `~/bin` folder and make it executable.
 
 **Be sure that ~/bin is on [PATH](https://linuxize.com/post/how-to-add-directory-to-path-in-linux/),otherwise you will need to cd to ~/bin everytime.**
 ```
