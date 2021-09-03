@@ -32,7 +32,14 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + [ueberzug](https://github.com/seebye/ueberzug) - *optional* - `$adl -c` will download covers from anilist to `/tmp/`, then will display the covers using `ueberzug` in the fzf anime selection window. Alternatively, the script `adl_covers.py` in this repo also downloads covers.
 
 ### Installation
+#### Windows
++ First install [Chocolatey](https://chocolatey.org/install) package manager.
++ Install [git-for-windows](https://gitforwindows.org/).
++ Now open cmd/powershell as administrator and install dependencies for anime-downloader and adl,i.e:
+```
 
+```
+#### Linux
 Simply download the script in your `~/bin` folder and make it executable.
 
 ```
