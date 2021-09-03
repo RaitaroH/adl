@@ -35,10 +35,17 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 #### Windows
 + First install [Chocolatey](https://chocolatey.org/install) package manager.
 + Install [git-for-windows](https://gitforwindows.org/).
-+ Now open cmd/powershell as administrator and install dependencies for anime-downloader and adl,i.e:
++ Now open cmd/powershell as administrator and install dependencies for anime-downloader and adl,i.e copy-paste following commands:
 ```
-
+choco install -y python3 aria2 mpv fzf nodejs
+refreshenv
 ```
++ Install trackma and anime-downloader using pip,i.e:
+```
+pip install -U git+https://github.com/anime-dl/anime-downloader Trackma
+```
+**If you already have trackma Setup,then skip following step**
++ Now we need to setup trackma,which is pretty straight-forward.type trackma in cmd/powershell.type a to add an account.now type the site that you want to connect trackma with(i.e:anilist,etc).after entering your user-name you will be given a link
 #### Linux
 Simply download the script in your `~/bin` folder and make it executable.
 
