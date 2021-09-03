@@ -30,9 +30,10 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`.
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
 + [ueberzug](https://github.com/seebye/ueberzug) - *optional* - `$adl -c` will download covers from anilist to `/tmp/`, then will display the covers using `ueberzug` in the fzf anime selection window. Alternatively, the script `adl_covers.py` in this repo also downloads covers.
++ [nodejs](https://nodejs.org/en/download/package-manager/) required by many anime providers,including the default one.
 
-### Installation
-#### Windows
+## Installation
+### Windows
 + First install [Chocolatey](https://chocolatey.org/install) package manager.
 + Install [git-for-windows](https://gitforwindows.org/).
 + Now open cmd/powershell as administrator and install dependencies for anime-downloader and adl,i.e copy-paste following commands:
@@ -45,10 +46,10 @@ refreshenv
 pip install -U git+https://github.com/anime-dl/anime-downloader Trackma
 ```
 **If you already have trackma Setup,then skip following step**
-+ Now we need to setup trackma,which is pretty straight-forward.type trackma in cmd/powershell.type a to add an account.now type the site that you want to connect trackma with(i.e:anilist,etc).after entering your user-name you will be given a link,paste that link in the browser and give permissions to trackma.you will be given a pin,copy that pin and paste it in the prommpt asking for the pin.trackma has been initialized at this point.
++ Now we need to setup trackma,which is pretty straight-forward.type trackma in cmd/powershell.type a to add an account.now type the site that you want to connect trackma with(i.e:anilist,etc).after entering your user-name you will be given a link,paste that link in the browser and give permissions to trackma.you will be given a pin,copy that pin and paste it in the prompt asking for the pin.trackma has been initialized at this point.
 
-**if you update any list on anilist or any other site,then you will have to update it in trackma using the ```retrieve``` command.**
-+ Now we can use use our bash script using ```bash.exe```,which in many cases will be present in "C:\Program Files\Git\bin\",if you have changed the installation directory then change to "that-directory\Git\bin\".we can use bash.exe as it is,but for convinience we will add this directory to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).after that use ```refreshenv``` to reload the environment variables.
+**Note:if you update your anime watch-list on anilist or any other site,then you will have to update it in trackma using the ```retrieve``` command.**
++ Now we can use our bash script using ```bash.exe```,which in many cases will be present in "C:\Program Files\Git\bin\",if you have changed the installation directory then change to "that-directory\Git\bin\".we can use bash.exe as it is,but for convinience we will add this directory to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).after that use ```refreshenv``` to reload the environment variables.
 + Now that all of you dependencies have been installed,we can download adl using git and cd into it,i.e:
 ```
 git clone https://github.com/RaitaroH/adl.git
@@ -62,8 +63,11 @@ otherwise if you didn't add the directory on PATH ,then
 ```
 "Installation Dir\Git\bin\bash.exe" .\adl
 ```
-#### Linux
+### Linux
 Simply download the script in your `~/bin` folder and make it executable.
+
+**Be sure that ~/bin is on [PATH](https://linuxize.com/post/how-to-add-directory-to-path-in-linux/),otherwise you will need to cd to ~/bin everytime.**
+```
 mkdir -p "$HOME/bin"
 wget https://raw.githubusercontent.com/RaitaroH/adl/master/adl -O "$HOME/bin/adl"
 chmod +x "$HOME/bin/adl"
