@@ -39,7 +39,7 @@ animedir=""
 # Function to reset some vars
 reset_vars() { #{{{
   ctrlc="0" #making sure this counter is reset
-  err="0"
+  # err="0"
   ferr="0"
   show_title=""
   show_episode=""
@@ -223,7 +223,7 @@ animedl() { #{{{
   trap "trap_ctrlc" 2
   color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
   # echo "$title $3 $4"
-  out=""
+  local out=""
 
   if [ "$local" == "0" ]; then
     # I can't seem to get anime dl to work unless I use a function like this
@@ -253,7 +253,7 @@ animedl() { #{{{
       -o -type f -name "$2" -print | sort | fzf_hint "$3"
     }
     if [[ "$4" != "" ]]; then
-      list=""; out="";
+      list=""; local out="";
       # get all anime episodes in one variable, on new lines
       for i in $(seq "$3" "$4"); do
         list+="$(_find_files "$animedir/$2/" "*$i*" "$i")\n"
