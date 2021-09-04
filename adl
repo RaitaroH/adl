@@ -125,7 +125,7 @@ start_ueberzug() {
 }
 draw_preview() {
   img=$(echo "${@}" | perl -pe "s/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1/g")
-  [ ! -e "/tmp/$img.png" ] && adl_covers "$img"
+  [ ! -s "/tmp/$img.png" ] && adl_covers "$img"
 
   >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
       [action]=add [identifier]="preview" \
