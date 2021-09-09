@@ -29,7 +29,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
   Make sure you install the [latest version](https://github.com/RaitaroH/adl/issues/35) from github;
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`;
-+ **perl** - for regular expressions;
++ [perl](https://strawberryperl.com/) - for regular expressions.download ;
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
 + [ueberzug](https://github.com/seebye/ueberzug) - *optional* - `$adl -c` will download covers from anilist to `/tmp/` using **cURL** and **wget**, then will display the covers using `ueberzug` in the fzf anime selection window. Alternatively, the script `adl_covers.py` in this repo also downloads covers.
 
