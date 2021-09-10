@@ -62,17 +62,16 @@ check_player() { #{{{
     fi
   else 
     echo "Platform:Windows"
-    start player_check.bat
-    player_bool=`cat player_bool`
-    if [[ $player_bool -eq 0 ]]; then
+    start player_check.bat "$player"
+    sleep 0.4s
+    player_bool="$(cat player_bool_file)"
+    rm -rf player_bool_file
+    if [ "$player_bool" -eq 0 ]; then
       echo "Error: '$player' is not installed." >&2
       print_options
       exit 1
     fi
-    rm -rf player_bool
   fi
-  
-
   clear
 } #}}}
 check_frece() { #{{{
