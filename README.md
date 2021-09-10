@@ -27,7 +27,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. [Git version](https://github.com/vn-ki/anime-downloader/issues/226) required for `$adl -y`. Settings for `anime-downloader`, such as provider, need to be placed in your [configuration file](https://github.com/vn-ki/anime-downloader/wiki/Config), as instructed in the documentation.
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
-  Make sure you install the latest version to prevent [#35](https://github.com/RaitaroH/adl/issues/35) from github;
+  Make sure you install the latest version from github to prevent issue [#35](https://github.com/RaitaroH/adl/issues/35);
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`;
 + **perl** - for regular expressions;
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
@@ -83,10 +83,14 @@ cd adl
 ```
 bash .\adl
 ```
-  + see `adl -h` for more information.
+  - see `adl -h` for more information.
 
 **Windows sepcific issues**
-+ covers don't work.
++ covers don't work;
++ in the event that `adl` cannot count watched episodes:
+  1. verify that `mpv.com` exists at `C:\ProgramData\chocolatey\lib\mpv.install\tools`; 
+  2. from a CMD run `echo %PATHEXT%` to test if you get `.COM;.EXE;...` and not `.EXE;.COM...`. Change the [PATHEXT](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) if needed.
+  3. use `bash .\adl -p 'mpv.com'` as last option. This might break some providers.
 
 ### Trackma Setup
 Setting up Trackma can be done using the GTK and Qt interfaces. Alternatively:
