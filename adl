@@ -166,7 +166,7 @@ set_fzf_covers() {
   else
     fzf_select() {
       fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: " \
-            --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+          --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
 }
