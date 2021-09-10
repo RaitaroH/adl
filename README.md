@@ -52,6 +52,7 @@ chmod +x "$HOME/.local/bin/adl"
 + If you are using Arch Linux you can install from the [Arch Linux User Repository (AUR)](https://aur.archlinux.org/packages/adl-git/) thanks to [@Baitinq](https://github.com/Baitinq).
 
 + Setup trackma as seen [below](#trackma-setup). If you already have trackma set up, then skip this step.
++ Change default provider, [Anime Downloader Configuration](#anime-downloader-configuration).
 
 ### Windows
 Windows platform is not officially supported. User discretion is advised.
@@ -70,6 +71,7 @@ pip install -U git+https://github.com/anime-dl/anime-downloader Trackma
 ```
 
 + Setup trackma as seen [below](#trackma-setup). If you already have trackma set up, then skip this step.
++ Change default provider, [Anime Downloader Configuration](#anime-downloader-configuration).
 
 + Download this repository. You will need `adl` and `player_check.bat` at the least. You may download the zip or clone the repository. Be mindful of the folder you are in:
 ```
@@ -79,10 +81,11 @@ cd adl
 
 + To run the script execute the command from below. `C:\Program Files\Git\bin\` should be added to your [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) to simply use `bash.exe`. You may type `refreshenv` to reload the environment variables after adding to PATH, or reopen the CMD/PowerShell. **Note:** `.\adl` assumes you are currently in the folder where adl is; otherwise specify the full path.
 ```
-bash.exe .\adl
+bash.exe .\adl -p 'mpv.com' -i 'animerush'
 or
-bash.exe C:\PathToInstallFolder\adl
+bash.exe C:\PathToInstallFolder\adl -p 'mpv.com' -i 'animerush'
 ```
+  + see `adl -h` for more information.
 
 **Windows sepcific issues**
 + by default in Windows `mpv.com` needs to be used instead of `mpv.exe`, as `mpv.exe` does not output to terminal;
@@ -97,6 +100,14 @@ Setting up Trackma can be done using the GTK and Qt interfaces. Alternatively:
   + Copy the url in a browser and get your token from the anime site;
   + Paste the pin in the CMD/PowerShell/Terminal;
   + Type `retrieve` to get your list. **Note:** you may use `adl -r` to force retrieve before getting the anime list.
+
+### Anime Downloader Configuration
+The default provider `anime dl` is using, may not provide the best results. As such either:
++ configure `anime dl` by editing the [config.json](https://anime-downlader.readthedocs.io/en/latest/usage/config.html#config-json) file. Change `"provider": "twist.moe"` to another provider such as `vidstream` or `animerush`.
++ or run adl with the provider flag:
+```
+adl --provider 'animerush'
+```
 
 ## Updating
 
