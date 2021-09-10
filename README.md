@@ -27,7 +27,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. [Git version](https://github.com/vn-ki/anime-downloader/issues/226) required for `$adl -y`. Settings for `anime-downloader`, such as provider, need to be placed in your [configuration file](https://github.com/vn-ki/anime-downloader/wiki/Config), as instructed in the documentation.
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
-  Make sure you install the [latest version](https://github.com/RaitaroH/adl/issues/35) from github;
+  Make sure you install the latest version to prevent [#35](https://github.com/RaitaroH/adl/issues/35) from github;
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`;
 + **perl** - for regular expressions;
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
@@ -81,14 +81,11 @@ cd adl
 
 + To run the script execute the command from below. `C:\Program Files\Git\bin\` should be added to your [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) to simply use `bash.exe`. You may type `refreshenv` to reload the environment variables after adding to PATH, or reopen the CMD/PowerShell. **Note:** `.\adl` assumes you are currently in the folder where adl is; otherwise specify the full path.
 ```
-bash.exe .\adl -p 'mpv.com' -i 'animerush'
-or
-bash.exe C:\PathToInstallFolder\adl -p 'mpv.com' -i 'animerush'
+bash .\adl
 ```
   + see `adl -h` for more information.
 
 **Windows sepcific issues**
-+ by default in Windows `mpv.com` needs to be used instead of `mpv.exe`, as `mpv.exe` does not output to terminal;
 + covers don't work.
 
 ### Trackma Setup
