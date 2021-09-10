@@ -33,6 +33,7 @@ retrieve=""
 download="0"
 ctrlc="0"
 watched="0"
+windows_specific_cmd="ipconfig" # you can change it to any windows specific command
 # For local anime viewing define directory and change local to 1
 local="0"
 animedir=""
@@ -51,11 +52,25 @@ reset_vars() { #{{{
 declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou")
 
 check_player() { #{{{
-  # Exit if "$player" is not installed
-  if ! [ -x "$(command -v $player)" ]; then
-    echo "Error: '$player' is not installed." >&2
-    print_options
-    exit 1
+  # Check platform and Exit if "$player" is not installed
+  if ! [ -x "$(command -v $windows_specific_cmd)" ]; then
+    echo "Platform:Linux"
+    if ! [ -x "$(command -v $player)" ]; then
+      echo "Error: '$player' is not installed." >&2
+      print_options
+      exit 1
+    fi
+  else
+    echo "Platform:Windows"
+    start player_check.bat "$player"
+    sleep 0.4s
+    player_bool="$(cat player_bool_file)"
+    rm -rf player_bool_file
+    if [ "$player_bool" -eq 0 ]; then
+      echo "Error: '$player' is not installed." >&2
+      print_options
+      exit 1
+    fi
   fi
   clear
 } #}}}
@@ -231,7 +246,6 @@ animedl() { #{{{
     player_arg="$1"
     down_arg()     { [[ "$download" == "0" ]] && echo "--play $player_arg"   || echo "" ;}
     provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
-
     if [[ "$4" != "" ]]; then
       { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
       animedl_args="$3 $4" # remember episode numbers for provider retry

@@ -5,7 +5,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 
 ![](./images/terminal.svg)
 
-### Features
+## Features
 
 + fetch currently watching anime from your account;
 + option to change account used by trackma;
@@ -22,39 +22,105 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
 
-### Requirements
+## Requirements
 
 + [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. [Git version](https://github.com/vn-ki/anime-downloader/issues/226) required for `$adl -y`. Settings for `anime-downloader`, such as provider, need to be placed in your [configuration file](https://github.com/vn-ki/anime-downloader/wiki/Config), as instructed in the documentation.
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
-  Make sure you install the [latest version](https://github.com/RaitaroH/adl/issues/35) from github;
+  Make sure you install the latest version from github to prevent issue [#35](https://github.com/RaitaroH/adl/issues/35);
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`;
 + **perl** - for regular expressions;
 + [frece](https://github.com/SicariusNoctis/frece) - *optional* - `$adl -f` will show most watched anime at the top of the list. By default frece is not used;
 + [ueberzug](https://github.com/seebye/ueberzug) - *optional* - `$adl -c` will download covers from anilist to `/tmp/` using **cURL** and **wget**, then will display the covers using `ueberzug` in the fzf anime selection window. Alternatively, the script `adl_covers.py` in this repo also downloads covers.
 
-### Installation
-
-Simply download the script in your `~/bin` folder and make it executable.
+## Installation
+### Linux
++ Install all the dependencies from above.
++ Simply download the script into your `~/bin` or `~/local/bin` folder and make it executable. `~/bin` should be added to your $PATH.
 
 ```
 mkdir -p "$HOME/bin"
 wget https://raw.githubusercontent.com/RaitaroH/adl/master/adl -O "$HOME/bin/adl"
 chmod +x "$HOME/bin/adl"
 ```
-If you are using Arch Linux you can install from the [Arch Linux User Repository (AUR)](https://aur.archlinux.org/packages/adl-git/) thanks to [@Baitinq](https://github.com/Baitinq).
+Or:
+```
+wget https://raw.githubusercontent.com/RaitaroH/adl/master/adl -O "$HOME/.local/bin/adl"
+chmod +x "$HOME/.local/bin/adl"
+```
 
-### Updating
++ If you are using Arch Linux you can install from the [Arch Linux User Repository (AUR)](https://aur.archlinux.org/packages/adl-git/) thanks to [@Baitinq](https://github.com/Baitinq).
+
++ Setup trackma as seen [below](#trackma-setup). If you already have trackma set up, then skip this step.
++ Change default provider, [Anime Downloader Configuration](#anime-downloader-configuration).
+
+### Windows
+Windows platform is not officially supported. User discretion is advised.
+
++ Install [Chocolatey](https://chocolatey.org/install) package manager (used to install other dependencies).
++ Install [git-for-windows](https://gitforwindows.org/) (used to run the bash script).
++ Should not be needed to be installed separately, but [perl](https://strawberryperl.com/) and [curl](https://curl.se/windows/) are also required.
++ Open CMD/PowerShell as /Administrator/ and run the following dependencies. `nodejs` is not strictly needed, but many providers need it.
+```
+choco install -y python3 aria2 mpv fzf nodejs
+refreshenv
+```
++ Install trackma and anime-downloader using pip. **Note**: if needed you may install [youtube-dl](https://github.com/ytdl-org/youtube-dl) as well.
+```
+pip install -U git+https://github.com/anime-dl/anime-downloader Trackma
+```
+
++ Setup trackma as seen [below](#trackma-setup). If you already have trackma set up, then skip this step.
++ Change default provider, [Anime Downloader Configuration](#anime-downloader-configuration).
+
++ Download this repository. You will need `adl` and `player_check.bat` at the least. You may download the zip or clone the repository. Be mindful of the folder you are in:
+```
+git clone https://github.com/RaitaroH/adl.git
+cd adl
+```
+
++ To run the script execute the command from below. `C:\Program Files\Git\bin\` should be added to your [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) to simply use `bash.exe`. You may type `refreshenv` to reload the environment variables after adding to PATH, or reopen the CMD/PowerShell. **Note:** `.\adl` assumes you are currently in the folder where adl is; otherwise specify the full path.
+```
+bash .\adl
+```
+  - see `adl -h` for more information.
+
+**Windows sepcific issues**
++ covers don't work;
++ in the event that `adl` cannot count watched episodes:
+  1. verify that `mpv.com` exists at `C:\ProgramData\chocolatey\lib\mpv.install\tools`; 
+  2. from a CMD run `echo %PATHEXT%` to test if you get `.COM;.EXE;...` and not `.EXE;.COM...`. Change the [PATHEXT](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) if needed.
+  3. use `bash .\adl -p 'mpv.com'` as last option. This might break some providers.
+
+### Trackma Setup
+Setting up Trackma can be done using the GTK and Qt interfaces. Alternatively:
+  + In the CMD/PowerShell/Terminal type `trackma`;
+  + Type `a` to add an account;
+  + Type anilist/myanimelist etc;
+  + Enter your username;
+  + Copy the url in a browser and get your token from the anime site;
+  + Paste the pin in the CMD/PowerShell/Terminal;
+  + Type `retrieve` to get your list. **Note:** you may use `adl -r` to force retrieve before getting the anime list.
+
+### Anime Downloader Configuration
+The default provider `anime dl` is using, may not provide the best results. As such either:
++ configure `anime dl` by editing the [config.json](https://anime-downlader.readthedocs.io/en/latest/usage/config.html#config-json) file. Change `"provider": "twist.moe"` to another provider such as `vidstream` or `animerush`.
++ or run adl with the provider flag:
+```
+adl --provider 'animerush'
+```
+
+## Updating
 
 `adl` also has a function for updating itself from source. To use it run `adl -u` or `adl --update` and follow the prompts.
 
-### Issues
+## Issues
 
 If the show doesn't start for you, the script will inform you of this. If you are positive that the episode number has aired, then most likely the provider you are using is NOT yet up-to-date. If you want to try every provider to see where your show is hosted you can try this bash code to cycle through all of them.
 
 ```
 adlwrap() {
-  declare -a provider=(animepahe animeflix animefreak animeflv anistream gogoanime kissanime kisscartoon twist.moe itsaturday)
+  declare -a provider=(vidstream animerush animeout twist.moe vostfree animefrenzy 4anime animevibe animesimple animeonline360 animeflv animefreak animeflix darkanime gurminder animerush ryuanime animefree 4anime anitube animtime anime8 animebinge animedaisuki animetake animestar animesuge animevibe animixplay darkanime egyanime genoanime shiro tenshi.moe wcostream)
   for k in $provider; do
     printf "\n\033[0;31m%s\n" "PROVIDER: $k"
     anime dl "$1" --episodes "$2" --provider "$k" --play mpv
@@ -85,4 +151,3 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
-
