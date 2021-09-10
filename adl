@@ -60,7 +60,7 @@ check_player() { #{{{
       print_options
       exit 1
     fi
-  else 
+  else
     echo "Platform:Windows"
     start player_check.bat "$player"
     sleep 0.4s
@@ -245,7 +245,7 @@ animedl() { #{{{
     choice_arg()   { [[ -z "$yes" ]] && echo "" || echo "-c 1" ;}
     player_arg="$1"
     down_arg()     { [[ "$download" == "0" ]] && echo "--play $player_arg"   || echo "" ;}
-    provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;} 
+    provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
     if [[ "$4" != "" ]]; then
       { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
       animedl_args="$3 $4" # remember episode numbers for provider retry
