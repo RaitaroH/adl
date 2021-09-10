@@ -62,7 +62,6 @@ check_player() { #{{{
     fi
   else 
     echo "Platform:Windows"
-    [ "$player" == "mpv" ] && player="mpv.com"
     start player_check.bat "$player"
     sleep 0.4s
     player_bool="$(cat player_bool_file)"
