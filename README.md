@@ -89,7 +89,7 @@ bash .\adl
 + covers don't work;
 + in the event that `adl` cannot count watched episodes:
   1. verify that `mpv.com` exists at `C:\ProgramData\chocolatey\lib\mpv.install\tools`; 
-  2. from a CMD run `echo %PATHEXT%` to test if you get `.COM;.EXE;...` and not `.EXE;.COM...`. Change the [PATHEXT](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) if needed.
+  2. from a CMD run `echo %PATHEXT%` to test if you get `.COM;.EXE;...` and not `.EXE;.COM...`. Change the [PATHEXT](https://www.nextofwindows.com/what-is-pathext-environment-variable-in-windows) if needed.
   3. use `bash .\adl -p 'mpv.com'` as last option. This might break some providers.
 
 ### Trackma Setup
