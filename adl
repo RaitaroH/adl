@@ -153,18 +153,21 @@ draw_preview() {
 set_fzf_covers() {
   if [[ "$covers" == "1" ]]; then
     check_covers
+    # export is needed so it can work in fzf --preview
     export -f draw_preview
     export -f adl_covers
     fzf_select() {
       start_ueberzug
-      fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: "\
+      # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
+      local _msg="Colored entries are Airing. Type to search. Press enter to select "
+      fzf --ansi --reverse --cycle +m --prompt "$_msg" \
           --preview "draw_preview {}" --preview-window "left,20%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle -m --prompt "Multi-select with tab/shift-tab: " \
+      fzf --ansi --reverse --cycle +m --prompt "$_msg" \
           --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
@@ -591,25 +594,25 @@ updater() { #{{{
   read -r updater_ans
   case $updater_ans in
     "y"|"Y")
-      color_prompt "\nadl can be updated from master or develop. Which one do you choose? [M/d]: "
-      read -r source_ans
-      case $source_ans in
-        ""|"M"|"m")
-          source="master"
-          wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE" ;;
-        "d"|"D")
-          source="develop"
-          wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/develop/adl" -O "$DIR/$FILE" ;;
-        *)
-          color_print "Not an actual option. Exiting..."
-          exit 1 ;;
-      esac
-      color_print "\n✓ Update from $source is complete." ;;
+      # color_prompt "\nadl can be updated from master or develop. Which one do you choose? [M/d]: "
+      # read -r source_ans
+      # case $source_ans in
+      #   ""|"M"|"m")
+      #     source="master"
+      #     wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE" ;;
+      #   "d"|"D")
+      #     source="develop"
+      #     wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/develop/adl" -O "$DIR/$FILE" ;;
+      #   *)
+      #     color_print "Not an actual option. Exiting..."
+      #     exit 1 ;;
+      # esac
+      wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE"
+      color_print "\n✓ Update from master is complete." ;;
     ""|"n"|"N")
       color_print "Update aborted." ;;
     *)
-      color_print "Not an actual option. Exiting..."
-      exit 1 ;;
+      color_print "Not an actual option. Exiting..." ;;
   esac
 } #}}}
 
