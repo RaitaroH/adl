@@ -271,15 +271,15 @@ animedl() { #{{{
          [ "$_c" -lt 10 ] && _c="0$_c"
       fi
       find "$1" -maxdepth 1 \
-        -type f \( -name "*.srt" -o -name "*.ass" \) -prune \
-        -o -type f -name "*" -print | sort | \
+        -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
+        -o -type l,f -name "*" -print | sort | \
       perl -ne "/(?!.*\/)(?<!S|H|H\.|x|x\.|19|20|2)($_c+)(?!([0-9]0p)|([0-9]{2}))(?!([^a-z]+)(bits|bit))(?![^\(]*\)|[^\[]*\]|[^\{]*\})/i && print" \
       2> /dev/null | \
       fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $_c'" --preview-window "up,5%"
       # Explination {{{
       # $1 is the path; maxdepth to not go into OP/ED/Scans etc
       # prune any subtitle files from results
-      # print all files found into perl
+      # print all files found into perl, include symlinks
       # use perl to find EP only file, by not matching other things:
       # - (?!.*\/)                   match after last slash
       # - (?<!S|H|H.\|x|x\.|19|20|2) ignore S0X only, H264, H.264, x264, x.264 and years (ex 201x or 2020)
