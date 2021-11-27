@@ -37,6 +37,8 @@ windows_specific_cmd="ipconfig" # you can change it to any windows specific comm
 # For local anime viewing define directory and change local to 1
 local="0"
 animedir=""
+# To use covers with fzf by default
+# covers="1"
 # Function to reset some vars
 reset_vars() { #{{{
   ctrlc="0" #making sure this counter is reset
