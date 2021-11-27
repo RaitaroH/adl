@@ -14,7 +14,9 @@
 ##   -d, --download    Download instead of streaming;
 ##   -l, --local       Use local files instead of streaming. Define folder to be used for local as argument;
 ##   -f, --frece       Optionally adl can use frece to show most watched anime at the top of the list in fzf;
-##   -a, --account     By default trackma will use account 1. Use '-a "2"' for example to change trackma account;
+##   -a, --account     By default trackma will use account 1. Use \033[0;36m$adl -a "2"\033[0m for example to change trackma account;
+##   -q, --query       By default trackma will list watching. Use \033[0;36m$adl -q "query"\033[0m to change the list.
+##                     Available queries: watching, completed, rewatching, paused, dropped, plantowatch.
 ##   -u, --update      Update this script from github master;
 ##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug;
 ##   -h, --help        Display help and exit;
@@ -29,6 +31,7 @@ show_episode=""
 player="mpv"
 provider=""
 account="1"
+query="watching"
 retrieve=""
 download="0"
 ctrlc="0"
@@ -96,8 +99,9 @@ trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
-print_options()   { print_help | tail -15 ;}
-print_version()   { print_help | head -2  ;}
+print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
+print_options()   { print_help | tail +5 ;}
+print_version()   { print_help | head -2 ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
   [[ "$download" == "0" ]] && var="watching" || var="downloading"
@@ -109,7 +113,27 @@ get_list()        { #{{{
     trackma -a "$account" retrieve
     clear
   fi
-  tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
+  # change list
+  case "$query" in
+    "completed"|"rewatching"|"paused"|"dropped"|"plantowatch")
+      # 'trackma -a "$account" -' is needed to prevent: "BrokenPipeError: [Errno 32] Broken pipe"
+      # see https://github.com/z411/trackma/issues/79
+      # LINES and COLUMNS vars for long titles
+      # see https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818
+      tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=130 trackma -a "$account" - | \
+              sed -n '/[[:space:]].1/,${p;/results/q}' | head -n -1)
+    ;;
+    "watching")
+      # the above works with query=watching, but that method is hacky
+      # using official way for best compatability
+      tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
+    ;;
+  esac
+  if [[ "$tlist" == "" ]]; then
+    color_print "trackma returned empty '$query' list. Choose another list query."
+    print_queries
+    exit 1
+  fi
 } #}}}
 process_list()    {
   perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|/g'
@@ -569,22 +593,32 @@ show_function() { #{{{
 } #}}}
 
 watch_another() { #{{{
-    reset_vars
-    if [[ -z "$yes" ]]; then
-      [[ "$download" == "0" ]] && var="watch" || var="download"
-      color_prompt "\nWant to $var another anime? [Y/n]: "
-      read -r ans_another
-    else ans_another="n"
-    fi
-    case $ans_another in
-      ""|"y"|"Y")
-        [[ -z "$sent" ]] || color_print "Retrieving updated anime list...\n" && get_list
-        select_function ;;
-      "n"|"N")
-        color_print "Skipping watching another..."
-        ;;
-        # return 0 ;;
-    esac
+  reset_vars
+  if [[ -z "$yes" ]]; then
+    local _state=""
+    [[ "$download" == "0" ]] && _state="watch" || _state="download"
+    color_prompt  "\nWant to $_state another anime? [Y/n] \
+    \nType list query instead to change list and assume yes: "
+    read -r ans_another
+  else ans_another="n"
+  fi
+  # set -x
+  case $ans_another in
+    "completed"|"rewatching"|"paused"|"dropped"|"plantowatch"|"watching")
+      query="$ans_another"
+      local _msg="Retrieving updated $query anime list...\n"
+      color_print "$_msg" && get_list && select_function
+    ;;
+    ""|"y"|"Y")
+      local _msg="Retrieving updated $query anime list...\n"
+      color_print "$_msg" && get_list && select_function
+    ;;
+    "n"|"N")
+      color_print "Skipping watching another..." ;;
+      # return 0 ;;
+    *)
+      print_queries ;;
+  esac
 } #}}}
 
 updater() { #{{{
@@ -626,8 +660,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:i:s:n:a:yrdl:fc \
-                      -l version,help,update,player:,provider:,show:,number:,account:,no-confirm,retrieve,download,local:,frece,covers \
+if ! params="$(getopt -o vhup:i:s:n:a:q:yrdl:fc \
+                      -l version,help,update,player:,provider:,show:,number:,account:,query:,no-confirm,retrieve,download,local:,frece,covers \
                       --name "$0" -- "$@")"; then print_options; exit 1; fi
 eval set -- "$params"
 
@@ -642,6 +676,7 @@ while true; do
     -s|--show)       arguments "$opt" "$2" show_title ;;
     -n|--number)     arguments "$opt" "$2" show_episode ;;
     -a|--account)    arguments "$opt" "$2" account ;;
+    -q|--query)      arguments "$opt" "$2" query ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
     -d|--download)   download="1"  ;; # Download instead of streaming
