@@ -8,6 +8,7 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 ## Features
 
 + fetch currently watching anime from your account;
++ ability to switch between lists: watching, completed, rewatching, paused, dropped, plantowatch;
 + option to change account used by trackma;
 + option to update local list;
 + select multiple anime to be watched in sequence;
