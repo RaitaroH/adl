@@ -102,6 +102,7 @@ print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than 
 print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
 print_options()   { print_help | tail +5 ;}
 print_version()   { print_help | head -2 ;}
+print_noselect()  { color_print "Nothing was selected. Exiting..." ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
   [[ "$download" == "0" ]] && var="watching" || var="downloading"
@@ -233,6 +234,8 @@ select_function() { #{{{
           [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
           echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
           ((line_number++)); done | fzf_select)"
+      # deal with ctrlc at fzf for frece; otherwise will print "Entry not found in database"
+      [[ "$choice" == "" ]] && print_noselect && return 0
       echo "$choice" | process_list | \
         while IFS= read -r line ; do
           echo "$line" >> "$ENTRIES_FILE" # reuse this file
@@ -246,13 +249,16 @@ select_function() { #{{{
 
   if [[ -z "$use_frece" ]]; then
     readarray -t lines <<< "$entry"
+    # test for ctrlc at fzf select screen
+    [[ "$lines" == "" ]] && print_noselect && return 0
     for line in "${lines[@]}"; do
       watch "$line" "$present"
       echo
     done
   else
+    # for frece we get lines from a file
     readarray -t lines <<< "$(cat "$ENTRIES_FILE")"
-    [[ -z "${#lines[@]}" ]] && color_print "Nothing was selected. Exiting." && return 0
+    # testing for empty above instead to avoid an error
     for line in "${lines[@]}"; do
       chosen=$(echo "$entry" | grep "$line")
       watch "$chosen" "$present"
@@ -322,6 +328,8 @@ animedl() { #{{{
       for i in $(seq "$3" "$4"); do
         list+="$(_find_files "$animedir/$2/" "$i")\n"
       done
+      # test if ctrl-c at fzf
+      [[ "$list" != *"$2"* ]] && print_noselect && return 0
       # for each line open mpv
       while IFS= read -r line; do
         if [ "$ctrlc" = 0 ]; then
@@ -372,8 +380,6 @@ watch() { #{{{
   score="$(echo "$1" | cut -d'|' -f4)"
   [[ "$last" == "?" ]] && last=$((nr + 12))
   sent=""
-
-  [[ -z "$title" ]] && color_print "Nothing was selected. Exiting." && return 1
 
   # test if an anime title has a period at the end or not. If yes add one
   for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
@@ -698,4 +704,4 @@ fi
 # Cleanup
 [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"; # cleanup this file
 [[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"; # cleanup this file
-color_print "Thank you for using adl ✨! \nExiting."
+color_print "\nThank you for using adl ✨! \nExiting."
