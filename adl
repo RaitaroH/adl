@@ -40,6 +40,8 @@ windows_specific_cmd="ipconfig" # you can change it to any windows specific comm
 # For local anime viewing define directory and change local to 1
 local="0"
 animedir=""
+# change digit to show that many previous episodes during multi fzf select
+mbuffer="0"
 # To use covers with fzf by default
 # covers="1"
 # Function to reset some vars
@@ -297,14 +299,17 @@ animedl() { #{{{
     # instead of streaming, play from local media
     # this obviously requires identical folder names to ones on anilist
     _find_files() {
+      find "$1" -maxdepth 1 \
+        -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
+        -o -type l,f -name "*" -print | sort
+    }
+    _proc_files() {
       local _c="$2"
       # for better searching have 0X instead of X
       if [ "$_c"  != "" ]; then
          [ "$_c" -lt 10 ] && _c="0$_c"
       fi
-      find "$1" -maxdepth 1 \
-        -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
-        -o -type l,f -name "*" -print | sort | \
+      _find_files "$1" | \
       perl -ne "/(?!.*\/)(?<!S|H|H\.|x|x\.|19|20|2)($_c+)(?!([0-9]0p)|([0-9]{2}))(?!([^a-z]+)(bits|bit))(?![^\(]*\)|[^\[]*\]|[^\{]*\})/i && print" \
       2> /dev/null | \
       fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $_c'" --preview-window "up,5%"
@@ -324,31 +329,42 @@ animedl() { #{{{
     }
     if [[ "$4" != "" ]]; then
       list=""; local out="";
-      # get all anime episodes in one variable, on new lines
-      for i in $(seq "$3" "$4"); do
-        list+="$(_find_files "$animedir/$2/" "$i")\n"
-      done
+      # check for multi-select or not
+      if [[ "$ans_episode" == "m" ]]; then
+        # get all anime episodes in one variable using fzf multi select
+        # mbuffer to show previous episodes
+        list="$(_find_files "$animedir/$2" | sed -ne "/$(($3-$mbuffer))/,$ p" | \
+          fzf -m --reverse --ansi --keep-right --cycle --prompt 'Multi select with tab/shift+tab. Enter to confirm: '\
+          --preview "echo 'Current episode to watch: $3. Change mbuffer to display previous episodes.'" --preview-window "up,5%")"
+      else
+        # if we know episode range, create list line by line
+        for i in $(seq "$3" "$4"); do
+          list+="$(_proc_files "$animedir/$2/" "$i")\n"
+        done
+      fi
       # test if ctrl-c at fzf
       [[ "$list" != *"$2"* ]] && print_noselect && return 0
       # for each line open mpv
-      while IFS= read -r line; do
+      # read -d changes the delimiter character used to mark the end of an input line; needed for multi fzf
+      while IFS= read -r -d$'\n' line; do
         if [ "$ctrlc" = 0 ]; then
           { out+=$($player "$line" | tee >(cat - >&5)); } 5>&1
           animedl_args="$3 $4"
         else return 1; fi
-      done <<< $(echo -e $list)
+      done <<< $(echo -e "$list")
     else
       if [[ "$3" != "" ]]; then
-        { out=$($player "$(_find_files "$animedir/$2/" "$3")" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(_proc_files "$animedir/$2/" "$3")" | tee >(cat - >&5)); } 5>&1
         animedl_args="$3"
       else
-        { out=$($player "$(_find_files "$animedir/$2/" "")" | tee >(cat - >&5)); } 5>&1
+        { out=$($player "$(_proc_files "$animedir/$2/" "")" | tee >(cat - >&5)); } 5>&1
         animedl_args=""
       fi
     fi
   fi
 
   # Initialize watched counter
+  # set -x # errors when loading file > still counted episode
   case $player in
     "vlc")
       watched=$((watched + $(echo "$out" | grep -c 'Command Line Interface initialized') )) ;;
@@ -389,15 +405,16 @@ watch() { #{{{
   if [ -z "$show_episode" ]; then # if -n was used skip this, -r will be chosen
     color_print "Enter lowercase or uppercase to issue command:
       N - Next episode (default, press <ENTER>)
+      M - Multi select of episodes. You see available filenames
+    0-9 - Plus n episodes relative to last seen (type number)
       L - from current to Last known
       A - All available, from episode 1
       I - custom Interval (range) of episodes
-    0-9 - Plus n episodes relative to last seen (type number)
       R - Rewatch/redownload current episode in list
       C - Custom episode
       U - Update entry chosen instead of streaming
       S - Skip. Choose another show."
-    color_prompt "Your choice? [N/l/a/i/0-9/r/c/u/s]: "
+    color_prompt "Your choice? [N/m/0-9/l/a/i/r/c/u/s]: "
     if [[ -z "$yes" ]]; then read -r ans_episode
     else ans_episode="" ; print_noconfirm
     fi
@@ -432,6 +449,10 @@ watch() { #{{{
       read -r interval_stop
       watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
       animedl "$player" "$title" "$interval_start" "$interval_stop" ;;
+    "m"|"M")
+      ans_episode="m"
+      watching_prompt "$title" "starting with episode" "#$nr"
+      animedl "$player" "$title" "$nr" "$((nr + 1))" ;;
     *[0-9]*) # If user gives number, assume P option from before
       # check if answer is not number or is 0
       if [[ ! $ans_episode =~ ^[0-9]+$ ]] || [[ "$ans_episode" == "0" ]] ; then
