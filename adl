@@ -342,14 +342,16 @@ animedl() { #{{{
           list+="$(_proc_files "$animedir/$2/" "$i")\n"
         done
       fi
-      # test if ctrl-c at fzf
+      # test if ctrl-c at fzf (if list empty)
       [[ "$list" != *"$2"* ]] && print_noselect && return 0
+      # get number of episodes selected, used for ans_continue later
+      # for multi option, this is needed
+      animedl_args="$3 $(($3 - 1 + $(wc -l <<< "$list") ))"
       # for each line open mpv
       # read -d changes the delimiter character used to mark the end of an input line; needed for multi fzf
       while IFS= read -r -d$'\n' line; do
         if [ "$ctrlc" = 0 ]; then
           { out+=$($player "$line" | tee >(cat - >&5)); } 5>&1
-          animedl_args="$3 $4"
         else return 1; fi
       done <<< $(echo -e "$list")
     else
