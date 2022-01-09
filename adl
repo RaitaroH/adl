@@ -282,13 +282,12 @@ select_function() { #{{{
       echo
     done
   fi
-
 } #}}}
 
 animedl() { #{{{
   # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
   trap "trap_ctrlc" 2
-  color_print "You can press Ctrl+C to cancel watching. That episode won't be counted."
+  color_print "You can press Ctrl+C to cancel watching. That episode will not be counted."
   # echo "$title $3 $4"
   local out=""
 
