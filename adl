@@ -45,13 +45,18 @@ mbuffer="0"
 # To use covers with fzf by default
 # covers="1"
 # Function to reset some vars
+# Functions to reset some vars
 reset_vars() { #{{{
   ctrlc="0" #making sure this counter is reset
   # err="0"
   ferr="0"
-  show_title=""
-  show_episode=""
-  provider_ans=""
+}
+reset_all_vars() {
+  watched="0"
+  unset -v tlist title nr last score
+  unset -v no_update
+  unset -v animedl_args animedl_last
+  unset -v ans_episode ans_another
 } #}}}
 
 # An array of anime that end with a fullstop/period/dot
@@ -739,4 +744,5 @@ fi
 # Cleanup
 [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
 [[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
+reset_all_vars
 color_print "\nThank you for using adl ✨! \nExiting."
