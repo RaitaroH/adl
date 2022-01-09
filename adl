@@ -371,7 +371,7 @@ animedl() { #{{{
     "vlc")
       watched=$((watched + $(echo "$out" | grep -c 'Command Line Interface initialized') )) ;;
     "mpv"|"mplayer")
-      watched=$((watched + $(echo "$out" | grep -c 'Exiting... (Quit)') ))
+      watched=$((watched + $(echo "$out" | grep -c -E "Exiting... (\(Quit\)|\(End of file\))") ))
       # consider possible errors
       # err=$(echo "$out" | grep -c -E 'Errors when loading file|ERROR')
       # [[ "$err" != "0" ]] && watched=$((watched - err))
