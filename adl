@@ -155,7 +155,7 @@ process_list()    {
 # https://github.com/seebye/ueberzug/blob/master/examples/fzfimg.sh
 adl_covers() {
   # for a python way, check the homepage
-  url=$(curl "https://graphql.anilist.co" \
+  local url=$(curl "https://graphql.anilist.co" \
     --silent -X POST -H 'content-type: application/json' -H 'accept: application/json' \
     --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$1\"}}")
   url=$(echo "$url" | sed -n 's/\\//g; s/.*"\(http.*\)".*/\1/p')
@@ -172,6 +172,7 @@ start_ueberzug() {
       exec
 }
 draw_preview() {
+  local img
   img=$(echo "${@}" | perl -pe "s/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1/g")
   [ ! -s "/tmp/$img.png" ] && adl_covers "$img"
 
@@ -209,6 +210,7 @@ set_fzf_covers() {
 
 select_function() { #{{{
   # Retrieve title and nr. Parse file only once
+  local present entry lines line line_number chosen choice
   if [[ -z "$1" ]]; then
     if [[ -z "$use_frece" ]]; then
       entry="$(echo "$tlist" | fzf_select | process_list)"
@@ -336,7 +338,7 @@ animedl() { #{{{
       # }}}
     }
     if [[ "$4" != "" ]]; then
-      list=""; local out="";
+      local list=""
       # check for multi-select or not
       if [[ "$ans_episode" == "m" ]]; then
         # get all anime episodes in one variable using fzf multi select
@@ -602,6 +604,7 @@ show_function() { #{{{
     color_print "Anime found in list. Proceeding.\n"
     select_function "$(echo "$tlist" | grep "$1" | process_list)"
   else
+    local ans_add
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
     if [[ -z "$yes" ]]; then read ans_add
     else ans_add="" && print_noconfirm
@@ -657,9 +660,9 @@ watch_another() { #{{{
 } #}}}
 
 updater() { #{{{
-  DIR=$(cd "$(dirname "$0")" || exit ; pwd)
-  FILE=$(basename "$0")
-  MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
+  local DIR=$(cd "$(dirname "$0")" || exit ; pwd)
+  local FILE=$(basename "$0")
+  local MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
   printf "\033[0;31m%s\033[0m" "$MESSAGE" #red warning
   # integration with -y option crossed my mind but it is unwise
   read -r updater_ans
