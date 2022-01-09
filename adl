@@ -413,14 +413,14 @@ watch() { #{{{
   nr="$(($(echo "$1" | cut -d'|' -f2) + 1))" #dat spacing tho
    last="$(echo "$1" | cut -d'|' -f3)"
   score="$(echo "$1" | cut -d'|' -f4)"
-  [[ "$last" == "?" ]] && last=$((nr + 12))
+  # [[ "$last" == "?" ]] && last=$((nr + 12))
   sent=""
 
   check_exceptions
 
   echo "$title > $((nr-1)) / $last"
 
-  if [ -z "$show_episode" ]; then # if -n was used skip this, -r will be chosen
+  if [ -z "$show_episode" ]; then # if -n was used skip this
     color_print "Enter lowercase or uppercase to issue command:
       N - Next episode (default, press <ENTER>)
       M - Multi select of episodes. You see available filenames
