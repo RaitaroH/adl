@@ -230,11 +230,13 @@ select_function() { #{{{
       readarray -t lines <<< "$(frece print "$DB_FILE")"
       for line in "${lines[@]}"; do
         chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
-        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE" # for every in copied database replace that line with the trackma -a "$account" style line
+        # for every in copied database replace that line with the trackma -a "$account" style line
+        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE"
       done
 
       line_number=1
-      [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE" # cleanup this file
+      # cleanup this file
+      [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
       choice="$(frece print "$FZF_FILE" | \
         while IFS= read -r line ; do
           [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
@@ -244,12 +246,14 @@ select_function() { #{{{
       [[ "$choice" == "" ]] && print_noselect && return 0
       echo "$choice" | process_list | \
         while IFS= read -r line ; do
-          echo "$line" >> "$ENTRIES_FILE" # reuse this file
+          # reuse this file
+          echo "$line" >> "$ENTRIES_FILE"
           frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
     fi
   else
-    entry="$1" #retrieved custom show from adl input
+    # retrieved custom show from adl input
+    entry="$1"
     present="0"
   fi
 
@@ -420,8 +424,8 @@ watch() { #{{{
       U - Update entry chosen instead of streaming
       S - Skip. Choose another show."
     color_prompt "Your choice? [N/m/0-9/l/a/i/r/c/u/s]: "
-    if [[ -z "$yes" ]]; then read -r ans_episode
-    else ans_episode="" ; print_noconfirm
+    if [[ -z "$yes" ]]; then read ans_episode
+    else ans_episode="n" && print_noconfirm
     fi
   else ans_episode="r"
   fi
@@ -552,8 +556,8 @@ watch() { #{{{
   #only ask if anime is in list, only if streaming, only if there is something to even update
   if [[ -z "$2" && "$download" == "0" && "$watched" -gt 0 && "$no_update" != "1" ]]; then
     echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
-    if [[ -z "$yes" ]]; then read -r ans_update
-    else ans_update="" ; print_noconfirm
+    if [[ -z "$yes" ]]; then read ans_update
+    else ans_update="" && print_noconfirm
     fi
 
 
@@ -599,8 +603,8 @@ show_function() { #{{{
     select_function "$(echo "$tlist" | grep "$1" | process_list)"
   else
     color_prompt "Anime not found in list. Want to add it? [y/N]: "
-    if [[ -z "$yes" ]]; then read -r ans_add
-    else ans_add="" ; print_noconfirm
+    if [[ -z "$yes" ]]; then read ans_add
+    else ans_add="" && print_noconfirm
     fi
     echo
     case $ans_add in
@@ -686,14 +690,17 @@ updater() { #{{{
 arguments() { #{{{
   # check if option is interpreted as argument for previous option; match getopt error format
   # \ in printf because $2 was expanded into an argument for printf
-  if printf "%s" "$2" | grep -q "-"; then echo "$0: option requires an argument -- '$1'"; print_options; exit 1
+  if printf "%s" "$2" | grep -q "-"; then
+    echo "$0: option requires an argument -- '$1'"
+    print_options
+    exit 1
   else eval "$3='$(xargs <<< "$2")'"
   fi
 } #}}}
 
 if ! params="$(getopt -o vhup:i:s:n:a:q:yrdl:fc \
                       -l version,help,update,player:,provider:,show:,number:,account:,query:,no-confirm,retrieve,download,local:,frece,covers \
-                      --name "$0" -- "$@")"; then print_options; exit 1; fi
+                      --name "$0" -- "$@")"; then print_options && exit 1; fi
 eval set -- "$params"
 
 while true; do
@@ -727,6 +734,6 @@ else show_function "$show_title" "$show_episode"
 fi
 
 # Cleanup
-[[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"; # cleanup this file
-[[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"; # cleanup this file
+[[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
+[[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
 color_print "\nThank you for using adl ✨! \nExiting."
