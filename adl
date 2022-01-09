@@ -57,6 +57,10 @@ reset_vars() { #{{{
 # An array of anime that end with a fullstop/period/dot
 # required for trackma updating
 declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu")
+check_exceptions() {
+  # test if an anime title has a period at the end or not. If yes add one
+  for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
+}
 
 check_player() { #{{{
   # Check platform and Exit if "$player" is not installed
@@ -399,8 +403,7 @@ watch() { #{{{
   [[ "$last" == "?" ]] && last=$((nr + 12))
   sent=""
 
-  # test if an anime title has a period at the end or not. If yes add one
-  for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
+  check_exceptions
 
   echo "$title > $((nr-1)) / $last"
 
@@ -553,8 +556,6 @@ watch() { #{{{
     else ans_update="" ; print_noconfirm
     fi
 
-    # test if an anime title has a period at the end or not. If yes add one
-    for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
 
     case $ans_update in
       ""|"y"|"Y")
@@ -586,6 +587,7 @@ watch() { #{{{
         color_print "Option not available."
         ;;
     esac
+    check_exceptions
   fi
   watched=0
   watch_another
