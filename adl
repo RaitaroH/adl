@@ -293,54 +293,22 @@ animedl() { #{{{
 
   if [ "$local" == "0" ]; then
     # I can't seem to get anime dl to work unless I use a function like this
-    choice_arg()   { [[ -z "$yes" ]] && echo "" || echo "-c 1" ;}
-    player_arg="$1"
-    down_arg()     { [[ "$download" == "0" ]] && echo "--play $player_arg"   || echo "" ;}
-    provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
     if [[ "$4" != "" ]]; then
-      { out=$(anime dl $(down_arg) "$2" --episodes "$3":"$4" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
-      animedl_args="$3 $4" # remember episode numbers for provider retry
+      { out=$(anime dl $(_down_arg) "$2" --episodes "$3":"$4" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
+      # remember episode numbers for provider retry
+      animedl_args="$3 $4"
     else
       if [[ "$3" != "" ]]; then
-        { out=$(anime dl $(down_arg) "$2" --episodes "$3" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl $(_down_arg) "$2" --episodes "$3" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
         animedl_args="$3"
       else
-        { out=$(anime dl $(down_arg) "$2" $(choice_arg) $(provider_arg) | tee >(cat - >&5)); } 5>&1
+        { out=$(anime dl $(_down_arg) "$2" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
         animedl_args=""
       fi
     fi
   else
     # instead of streaming, play from local media
     # this obviously requires identical folder names to ones on anilist
-    _find_files() {
-      find "$1" -maxdepth 1 \
-        -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
-        -o -type l,f -name "*" -print | sort
-    }
-    _proc_files() {
-      local _c="$2"
-      # for better searching have 0X instead of X
-      if [ "$_c"  != "" ]; then
-         [ "$_c" -lt 10 ] && _c="0$_c"
-      fi
-      _find_files "$1" | \
-      perl -ne "/(?!.*\/)(?<!S|H|H\.|x|x\.|19|20|2)($_c+)(?!([0-9]0p)|([0-9]{2}))(?!([^a-z]+)(bits|bit))(?![^\(]*\)|[^\[]*\]|[^\{]*\})/i && print" \
-      2> /dev/null | \
-      fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $_c'" --preview-window "up,5%"
-      # Explination {{{
-      # $1 is the path; maxdepth to not go into OP/ED/Scans etc
-      # prune any subtitle files from results
-      # print all files found into perl, include symlinks
-      # use perl to find EP only file, by not matching other things:
-      # - (?!.*\/)                   match after last slash
-      # - (?<!S|H|H.\|x|x\.|19|20|2) ignore S0X only, H264, H.264, x264, x.264 and years (ex 201x or 2020)
-      # - (?!([0-9]0p)|([0-9]{2}))   ignore resolution size such as 1080p (ex ep 10), also years (ex 2020)
-      # - (?!([^a-z]+)(bits|bit))    ignore 10*bit(s) (ex ep 10)
-      # - lastly exclude anything inside () [] {}
-      # - case insensitive regex for X264
-      # - warning 'Variable length lookbehind is experimental in regex' thus 2> /dev/null
-      # }}}
-    }
     if [[ "$4" != "" ]]; then
       local list=""
       # check for multi-select or not
@@ -381,7 +349,7 @@ animedl() { #{{{
 
   # Initialize watched counter
   # set -x # errors when loading file > still counted episode
-  case $player in
+  case "$player" in
     "vlc")
       watched=$((watched + $(echo "$out" | grep -c 'Command Line Interface initialized') )) ;;
     "mpv"|"mplayer")
@@ -403,7 +371,42 @@ animedl() { #{{{
   # it seems like this decrease is not needed anymore
   # [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
   [[ "$watched" -lt 0 ]] && watched=0 ;
-} #}}}
+}
+# the following are subfunctions needed by above
+# better to not redefine them multiple times
+_choice_arg()   { [[ -z "$yes" ]] && echo "" || echo "-c 1" ;}
+_down_arg()     { [[ "$download" == "0" ]] && echo "--play $player"       || echo "" ;}
+_provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
+_find_files() {
+  find "$1" -maxdepth 1 \
+    -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
+    -o -type l,f -name "*" -print | sort
+}
+_proc_files() {
+  local _c="$2"
+  # for better searching have 0X instead of X
+  if [ "$_c"  != "" ]; then
+     [ "$_c" -lt 10 ] && _c="0$_c"
+  fi
+  _find_files "$1" | \
+  perl -ne "/(?!.*\/)(?<!S|H|H\.|x|x\.|19|20|2)($_c+)(?!([0-9]0p)|([0-9]{2}))(?!([^a-z]+)(bits|bit))(?![^\(]*\)|[^\[]*\]|[^\{]*\})/i && print" \
+  2> /dev/null | \
+  fzf -e --ansi --keep-right --cycle --preview "echo 'Episode number to select: $_c'" --preview-window "up,5%"
+  # Explination {{{
+  # $1 is the path; maxdepth to not go into OP/ED/Scans etc
+  # prune any subtitle files from results
+  # print all files found into perl, include symlinks
+  # use perl to find EP only file, by not matching other things:
+  # - (?!.*\/)                   match after last slash
+  # - (?<!S|H|H.\|x|x\.|19|20|2) ignore S0X only, H264, H.264, x264, x.264 and years (ex 201x or 2020)
+  # - (?!([0-9]0p)|([0-9]{2}))   ignore resolution size such as 1080p (ex ep 10), also years (ex 2020)
+  # - (?!([^a-z]+)(bits|bit))    ignore 10*bit(s) (ex ep 10)
+  # - lastly exclude anything inside () [] {}
+  # - case insensitive regex for X264
+  # - warning 'Variable length lookbehind is experimental in regex' thus 2> /dev/null
+  # }}}
+}
+#}}}
 
 watch() { #{{{
   title="$(echo "$1" | cut -d'|' -f1)"
