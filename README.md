@@ -1,9 +1,18 @@
-# adl
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<div align="center">
+  <h1>adl<br>
+    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/RaitaroH/adl?style=flat-square">
+    <a href="#contributors-">
+      <img alt="GitHub Repo stars" src="https://img.shields.io/github/all-contributors/RaitaroH/adl/master?color=orange&style=flat-square">
+    <a/>
+  </h1>
+  <p>
+    This is wrapper for <a href="https://github.com/vn-ki/anime-downloader">vn-ki/anime-downloader</a> +
+    <a href="https://github.com/z411/trackma">trackma</a>.<br>
+    The goal? Type adl, hit enter, choose show, watch show, update episode number with as little input as possible.
+  </p>
 
-This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) + [z411/trackma](https://github.com/z411/trackma). The goal? Type `adl`, hit enter, choose show, watch show, update episode number with as little input as possible.
-
-![](./images/terminal.svg)
+  ![](./images/terminal.svg)
+</div>
 
 ## Features
 
@@ -18,7 +27,16 @@ This is wrapper for [vn-ki/anime-downloader](https://github.com/vn-ki/anime-down
 + prompt user to add a score to an anime if the anime in question will be set as completed;
 + option to skip all user input - works in combination with the other options as well;
 + download instead of watching; everything from above still applies;
-+ use local media instead of streaming. Requires *identical folder name* to anilist anime title; ex: `Fruits Basket: 2nd Season` should be a folder inside `animedir`, otherwise `adl` will **not** find the anime folder. Considering different naming conventions, `fzf` is used for episode selecting and`perl` is used for better matching, but it will look for *0# format*.
++ use local media instead of streaming:
+  - requires *identical folder name* to anilist anime title; ex: `Fruits Basket:
+    2nd Season` should be a folder inside `animedir` containing the vidoes,
+    otherwise `adl` will **not** find the anime folder;
+  - considering different naming conventions, `fzf` is used for episode
+    selecting and `perl` is used for better matching, but it will search for *0#
+    format*;
+  - to avoid *Scans* and other such extras, the `find` maxdepth is set to *1*,
+    as such don't have folders inside folders; use a *symlink* instead, or change
+    the maxdepth value.
 + download covers from anilist and show them in the terminal;
 + do not display verbose vlc output;
 + warn user if episode wasn't found.
