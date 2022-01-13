@@ -90,21 +90,28 @@ check_player() { #{{{
   fi
   clear
 } #}}}
-check_frece() { #{{{
-  if ! [ -x "$(command -v frece)" ]; then
-    echo "Error: 'frece' is not installed." >&2
+check_dep() { #{{{
+  if ! [ -x "$(command -v "$1")" ]; then
+    echo -e "\033[1;31mError:\033[0m '$1' is not installed." >&2
+    echo -e "Dependencies are: ${dependencies[@]} [frece ueberzug curl wget] \n" >&2
     print_options
     exit 1
   fi
   clear
-} #}}}
+}
+check_deps() {
+  for d in "${dependencies[@]}"; do check_dep "$d"; done
+}
+declare -a dependencies=("anime" "trackma" "fzf" "find" "perl" "sed" "awk" "grep")
+#}}}
 check_covers() { #{{{
   if ! [ -x "$(command -v ueberzug)" ]; then
     echo "Error: Cannot display covers due to missing package 'ueberzug'." >&2
     print_options
     exit 1
   fi
-  clear
+  check_dep "curl"
+  check_dep "wget"
 } #}}}
 trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
@@ -235,7 +242,7 @@ select_function() { #{{{
       entry="$(echo "$tlist" | fzf_select | process_list)"
       present=""
     else
-      check_frece
+      check_dep "frece"
       entry="$(echo "$tlist" | process_list)"
       present=""
 
@@ -761,6 +768,7 @@ watch_another() { #{{{
 } #}}}
 
 updater() { #{{{
+  check_dep "wget"
   local DIR=$(cd "$(dirname "$0")" || exit ; pwd)
   local FILE=$(basename "$0")
   local MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
@@ -836,6 +844,7 @@ while true; do
 done
 
 check_player
+check_deps
 set_fzf_covers
 
 case "$show_title" in
