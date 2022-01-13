@@ -332,6 +332,7 @@ animedl() { #{{{
         list="$(_find_files "$animedir/$2" | sed -ne "/$(($3-$mbuffer))/,$ p" | \
           fzf -m --reverse --ansi --keep-right --cycle --prompt 'Multi select with tab/shift+tab. Order matters. Enter to confirm: '\
           --preview "echo 'Current episode to watch: $3. Change mbuffer to display previous episodes.'" --preview-window "up,5%")"
+        list+="\n"
       else
         # if we know episode range, create list line by line
         for i in $(seq "$3" "$4"); do
@@ -342,7 +343,7 @@ animedl() { #{{{
       [[ "$list" != *"$2"* ]] && print_noselect && return 0
       # get number of episodes selected, used for ans_continue later
       # for multi option, this is needed
-      animedl_args="$3 $(($3 - 1 + $(wc -l <<< "$list") ))"
+      animedl_args="$3 $(($3 - 1 + $(echo -en "$list" | wc -l) ))"
       # for each line open mpv
       # read -d changes the delimiter character used to mark the end of an input line; needed for multi fzf
       while IFS= read -r -d$'\n' line; do
