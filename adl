@@ -38,6 +38,8 @@ watched="0"
 windows_specific_cmd="ipconfig" # you can change it to any windows specific command
 # For local anime viewing define directory and change local to 1
 local="0"
+# By default animedl will save files at local path; change animedir to download there instead
+# unless "download_directory" is changed in yml config file - animdl will save there instead
 animedir=""
 # change digit to show that many previous episodes during multi fzf select
 mbuffer="0"
@@ -840,7 +842,7 @@ while true; do
     -q|--query)      arguments "$opt" "$2" query ;;
     -y|--no-confirm) yes="1"       ;; # Assume default; vlc breaks if 1 is piped into anime-dl
     -r|--retrieve)   retrieve="1"  ;; # Run trackma retrieve
-    -d|--download)   download="1"  ;; # Download instead of streaming
+    -d|--download)   download="1"; cd "$animedir" || return  ;; # Download instead of streaming
     -l|--local)      arguments "$opt" "$2" animedir; local=1 ;; # Use local media instead of streaming
     -f|--frece)      use_frece="1" ;;
     -c|--covers)     covers="1" ;;
