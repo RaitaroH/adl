@@ -6,7 +6,7 @@
     <a/>
   </h1>
   <p>
-    This is wrapper for <a href="https://github.com/vn-ki/anime-downloader">vn-ki/anime-downloader</a> +
+    This is wrapper for <a href="https://github.com/justfoolingaround/animdl">animdl</a> +
     <a href="https://github.com/z411/trackma">trackma</a>.<br>
     The goal? Type adl, hit enter, choose show, watch show, update episode number with as little input as possible.
   </p>
@@ -42,8 +42,9 @@
 + warn user if episode wasn't found.
 
 ## Requirements
-
-+ [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader/wiki/Installation) - make sure this works. [Git version](https://github.com/vn-ki/anime-downloader/issues/226) required for `$adl -y`. Settings for `anime-downloader`, such as provider, need to be placed in your [configuration file](https://github.com/vn-ki/anime-downloader/wiki/Config), as instructed in the documentation.
+**Note**: [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) seems to be depricated. As such I have ported to animdl.
+  
++ [animdl](https://github.com/justfoolingaround/animdl) - make sure this works. Settings for animdl, such as provider, need to be placed in your [configuration file](https://github.com/justfoolingaround/animdl#configurations).
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
 + [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
   Make sure you install the latest version from github to prevent issue [#35](https://github.com/RaitaroH/adl/issues/35);
@@ -122,12 +123,9 @@ Setting up Trackma can be done using the GTK and Qt interfaces. Alternatively:
   + Type `retrieve` to get your list. **Note:** you may use `adl -r` to force retrieve before getting the anime list.
 
 ### Anime Downloader Configuration
-The default provider `anime dl` is using, may not provide the best results. As such either:
-+ configure `anime dl` by editing the [config.json](https://anime-downlader.readthedocs.io/en/latest/usage/config.html#config-json) file. Change `"provider": "twist.moe"` to another provider such as `vidstream` or `animerush`.
-+ or run adl with the provider flag:
-```
-adl --provider 'animerush'
-```
+The provider `animdl` is using, may not work for you. As such configure `animdl` by editing the [config file](https://github.com/justfoolingaround/animdl#configurations).
+
+**Note** - adl used to be able to change providers, as "anime dl" had a flag for it; "animdl" does not, so you will ned to modify the file manually.
 
 ## Updating
 
@@ -135,25 +133,7 @@ adl --provider 'animerush'
 
 ## Issues
 
-If the show doesn't start for you, the script will inform you of this. If you are positive that the episode number has aired, then most likely the provider you are using is NOT yet up-to-date. If you want to try every provider to see where your show is hosted you can try this bash code to cycle through all of them.
-
-```
-adlwrap() {
-  declare -a provider=(vidstream animerush animeout twist.moe vostfree animefrenzy 4anime animevibe animesimple animeonline360 animeflv animefreak animeflix darkanime gurminder animerush ryuanime animefree 4anime anitube animtime anime8 animebinge animedaisuki animetake animestar animesuge animevibe animixplay darkanime egyanime genoanime shiro tenshi.moe wcostream)
-  for k in $provider; do
-    printf "\n\033[0;31m%s\n" "PROVIDER: $k"
-    anime dl "$1" --episodes "$2" --provider "$k" --play mpv
-  done
-}
-```
-
-The function above can be used like so: `$ adlwrap "SHOW" "EPISODE"`:
-
-```
-$ adlwrap "Gundam: The Origin" "1"
-```
-
-The providers there can be found with `anime dl --help`.
+If the show doesn't start for you, the script will inform you of this. If you are positive that the episode number has aired, then most likely the provider you are using is NOT yet up-to-date.
 
 ## Contributors ✨
 
