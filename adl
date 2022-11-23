@@ -581,10 +581,10 @@ watch() { #{{{
   [[ "$ans_episode" == "s" ]] && return 0
 
   # print error msg; check providers
-  while [[ "$watched" == "0" && "$ctrlc" == "0" && "$local" == "0" ]]; do
+  if [[ "$watched" == "0" && "$ctrlc" == "0" && "$local" == "0" && "$download" == "0" ]]; then
     color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..."
     change_providers
-  done
+  fi
   # unset -v ans_provider
 
   # continue watching selected
@@ -632,16 +632,13 @@ watch() { #{{{
           fi
           trackma -a "$account" send
           unset -v ans_score
-          sent="1"
           break ;;
         [nN]*)
-          sent=""
           color_print "Skipping..."
           break ;;
         [0-9]*)
           trackma -a "$account" update "$title" "$((nr + ans_update - 1))"
           trackma -a "$account" send
-          sent="1"
           break ;;
         *) ans_update="repeat_prompt" ;;
       esac
@@ -654,6 +651,7 @@ change_providers() { #{{{
   color_print "Check available providers here: https://github.com/justfoolingaround/animdl#providers"
   return
 
+  # used to be, for anime dl
   color_print "Available providers are: "
   echo "$(anime dl --help | grep 'provider' | head -1)"
   color_prompt "Try another provider? [N / provider name]: "
