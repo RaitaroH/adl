@@ -18,6 +18,7 @@
 ##                     Available queries: watching, completed, rewatching, paused, dropped, plantowatch;
 ##   -u, --update      Update this script from github master;
 ##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug;
+##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -48,15 +49,17 @@ mbuffer="0"
 
 # Functions to reset some vars
 reset_vars() { #{{{
+  debug_print "reset_vars()"
   ctrlc="0" #making sure this counter is reset
   # err="0"
   ferr="0"
 }
 reset_all_vars() {
+  debug_print "reset_all_vars()"
   watched="0"
   unset -v tlist title nr last score
   unset -v no_update
-  unset -v animedl_args animedl_last
+  unset -v animedl_last
   unset -v ans_episode ans_another
 } #}}}
 
@@ -64,11 +67,14 @@ reset_all_vars() {
 # required for trackma updating
 declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu")
 check_exceptions() {
+  debug_print "check_exceptions()"
   # test if an anime title has a period at the end or not. If yes add one
   for t in "${exceptions[@]}"; do [ "$title" == "$t" ] && title="${title}."; done
 }
 
 check_player() { #{{{
+  debug_print "check_player()"
+  debug_print_vars "player"
   # Check platform and Exit if "$player" is not installed
   if ! [ -x "$(command -v $windows_specific_cmd)" ]; then
     echo "Platform:Linux"
@@ -88,8 +94,12 @@ check_player() { #{{{
       print_options
       exit 1
     fi
+    debug_print_vars "player_bool" "player_bool_file"
+    unset -v player_bool player_bool_file
   fi
-  clear
+  if [[ "$debug" != "1" ]]; then
+    clear
+  fi
 } #}}}
 check_dep() { #{{{
   if ! [ -x "$(command -v "$1")" ]; then
@@ -98,14 +108,18 @@ check_dep() { #{{{
     print_options
     exit 1
   fi
-  clear
+  if [[ "$debug" != "1" ]]; then
+    clear
+  fi
 }
 check_deps() {
+  debug_print "check_deps()"
   for d in "${dependencies[@]}"; do check_dep "$d"; done
 }
 declare -a dependencies=("animdl" "trackma" "fzf" "find" "perl" "sed" "awk" "grep")
 #}}}
 check_covers() { #{{{
+  debug_print "check_covers()"
   if ! [ -x "$(command -v ueberzug)" ]; then
     echo "Error: Cannot display covers due to missing package 'ueberzug'." >&2
     print_options
@@ -119,19 +133,37 @@ color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
 color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
-print_options()   { print_help | tail +4 ;}
+print_options()   { print_help | tail +5 ;}
 print_version()   { print_help | head -1 ;}
 print_noselect()  { color_print "Nothing was selected. Exiting..." ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
+  debug_print "watching_prompt()"
   [[ "$download" == "0" ]] && var="watching" || var="downloading"
   echo -e "\nNow $var \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m"
 }
+debug_print()     {
+  if [[ "$debug" == "1" ]]; then
+    echo -e "\033[0;31m--- $* --- \033[0m"
+  fi
+}
+debug_print_vars() {
+  if [[ "$debug" == "1" ]]; then
+    for i in "$@"; do
+      echo -e "\033[0;31m    -$i = ${!i} \033[0m"
+    done
+  fi
+}
 get_list()        { #{{{
+  debug_print "get_list()"
+  debug_print_vars "retrieve" "account" "query"
+
   if [[ "$retrieve" == "1" ]]; then
     color_print "Running trackma retrieve for account $account..."
     trackma -a "$account" retrieve
-    clear
+    if [[ "$debug" != "1" ]]; then
+      clear
+    fi
   fi
   # change list
   case "$query" in
@@ -168,7 +200,8 @@ process_list()    {
 # https://github.com/seebye/ueberzug/blob/master/examples/fzfimg.sh
 adl_covers() {
   # for a python way, check the homepage
-  local url=$(curl "https://graphql.anilist.co" \
+  local url
+  url=$(curl "https://graphql.anilist.co" \
     --silent -X POST -H 'content-type: application/json' -H 'accept: application/json' \
     --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$1\"}}")
   url=$(echo "$url" | sed -n 's/\\//g; s/.*"\(http.*\)".*/\1/p')
@@ -198,6 +231,8 @@ draw_preview() {
       # add [synchronously_draw]=True if you want to see each change
 }
 set_fzf_covers() {
+  debug_print "set_fzf_covers()"
+  debug_print_vars "covers"
   if [[ "$covers" == "1" ]]; then
     check_covers
     _fzf_prompt="Colored entries are Airing. Type to search. Press enter to select "
@@ -236,6 +271,7 @@ nonzero() { # {{{
 } # }}}
 
 select_function() { #{{{
+  debug_print "select_function()"
   # Retrieve title and nr. Parse file only once
   local present entry lines line line_number chosen choice
   if [[ -z "$1" ]]; then
@@ -243,6 +279,7 @@ select_function() { #{{{
       entry="$(echo "$tlist" | fzf_select | process_list)"
       present=""
     else
+      debug_print "select_function() > frece"
       check_dep "frece"
       entry="$(echo "$tlist" | process_list)"
       present=""
@@ -279,6 +316,7 @@ select_function() { #{{{
           echo "$line" >> "$ENTRIES_FILE"
           frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
+      debug_print_vars "entry" "present" "choice"
     fi
   else
     # retrieved custom show from adl input
@@ -310,8 +348,10 @@ animedl() { #{{{
   # initialise trap to call trap_ctrlc function when signal 2 (SIGINT) is received
   trap "trap_ctrlc" 2
   color_print "You can press Ctrl+C to cancel watching. That episode will not be counted."
-  # echo "$title $3 $4"
   local out=""
+
+  debug_print "animedl($1, $2, $3, $4)"
+  debug_print_vars "local"
 
   if [ "$local" == "0" ]; then
     # I can't seem to get anime dl to work unless I use a function like this
@@ -319,18 +359,19 @@ animedl() { #{{{
       # { out=$(anime dl $(_down_arg) "$2" --episodes "$3":"$4" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
       { out=$(animdl $(_down_arg) "$2" --range "$3-$4" $(_choice_arg) | tee >(cat - >&5)); } 5>&1
       # remember episode numbers for provider retry
-      animedl_args="$3 $4"
+      animedl_last="$4"
     else
       if [[ "$3" != "" ]]; then
         # { out=$(anime dl $(_down_arg) "$2" --episodes "$3" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
         { out=$(animdl $(_down_arg) "$2" --range "$3" $(_choice_arg) | tee >(cat - >&5)); } 5>&1
-        animedl_args="$3"
+        animedl_last="$3"
       else
         # { out=$(anime dl $(_down_arg) "$2" $(_choice_arg) $(_provider_arg) | tee >(cat - >&5)); } 5>&1
         { out=$(animdl $(_down_arg) "$2" $(_choice_arg) | tee >(cat - >&5)); } 5>&1
-        animedl_args=""
+        animedl_last=""
       fi
     fi
+    debug_print_vars "animedl_last" "local"
   else
     # instead of streaming, play from local media
     # this obviously requires identical folder names to ones on anilist
@@ -354,7 +395,7 @@ animedl() { #{{{
       [[ "$list" != *"$2"* ]] && print_noselect && return 0
       # get number of episodes selected, used for ans_continue later
       # for multi option, this is needed
-      animedl_args="$3 $(($3 - 1 + $(echo -en "$list" | wc -l) ))"
+      animedl_last="$(($3 - 1 + $(echo -en "$list" | wc -l) ))"
       # for each line open mpv
       # read -d changes the delimiter character used to mark the end of an input line; needed for multi fzf
       while IFS= read -r -d$'\n' line; do
@@ -362,14 +403,16 @@ animedl() { #{{{
           { out+=$($player "$line" | tee >(cat - >&5)); } 5>&1
         else return 1; fi
       done <<< $(echo -e "$list")
+      debug_print_vars "animedl_last" "local"
     else
       if [[ "$3" != "" ]]; then
         { out=$($player "$(_proc_files "$animedir/$2/" "$3")" | tee >(cat - >&5)); } 5>&1
-        animedl_args="$3"
+        animedl_last="$3"
       else
         { out=$($player "$(_proc_files "$animedir/$2/" "")" | tee >(cat - >&5)); } 5>&1
-        animedl_args=""
+        animedl_last=""
       fi
+      debug_print_vars "animedl_last" "local"
     fi
   fi
 
@@ -396,6 +439,9 @@ animedl() { #{{{
   # it seems like this decrease is not needed anymore
   # [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
   [[ "$watched" -lt 0 ]] && watched=0 ;
+
+  debug_print "animedl() end"
+  debug_print_vars "player" "watched" "ctrlc" "ferr"
 }
 # the following are subfunctions needed by above
 # better to not redefine them multiple times
@@ -435,16 +481,18 @@ _proc_files() {
 #}}}
 
 watch() { #{{{
+  debug_print "watch()"
+
   title="$(echo "$1" | cut -d'|' -f1)"
   nr="$(($(echo "$1" | cut -d'|' -f2) + 1))" #dat spacing tho
    last="$(echo "$1" | cut -d'|' -f3)"
   score="$(echo "$1" | cut -d'|' -f4)"
   # [[ "$last" == "?" ]] && last=$((nr + 12))
-  sent=""
 
   check_exceptions
 
   echo "$title > $((nr-1)) / $last"
+  debug_print_vars "title" "nr" "last" "sent" "show_episode"
 
   if [ -z "$show_episode" ]; then # if -n was used skip this
     color_print "Enter lowercase or uppercase to issue command:
@@ -466,6 +514,7 @@ watch() { #{{{
     ans_episode="c"
   fi
   no_update=0
+  debug_print_vars "show_episode" "ans_episode"
   while true; do
     [[ "$ans_episode" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_episode
     case "$ans_episode" in
@@ -499,6 +548,11 @@ watch() { #{{{
         color_prompt "Last episode of episodes range: "
         read interval_stop
         interval_stop=$(nonzero "$interval_stop")
+
+        # by default nr is +1 the current episode
+        [[ "$interval_stop" -lt "$nr" ]] && no_update="1" || no_update="0"
+        debug_print_vars "interval_start" "interval_stop" "nr" "no_update"
+
         watching_prompt "$title" "episodes" "#$interval_start to #$interval_stop"
         animedl "$player" "$title" "$interval_start" "$interval_stop"
         unset -v interval_start interval_stop
@@ -546,7 +600,8 @@ watch() { #{{{
             [[ "$custom" == "repeat_prompt" ]] && read -p "Not a number. Enter a number: " custom
             case "$custom" in
               [0-9]*)
-                trackma -a "$account" $3 "$title" "$custom" || color_print "Skipping updating..."
+                trackma -a "$account" "$3" "$title" "$custom" || color_print "Skipping updating..."
+                [[ "$custom" -gt "$nr" ]] && nr=$((custom+1))
                 break ;;
               ""|*) custom="repeat_prompt" ;;
             esac
@@ -569,7 +624,6 @@ watch() { #{{{
         done
         trackma -a "$account" send
         unset -v ans_modify
-        sent="1"
         color_prompt "\nWhat else? [N/m/0-9/l/a/i/r/c/u/s]: "
         read ans_episode
         ;;
@@ -583,6 +637,8 @@ watch() { #{{{
   [[ "$ans_episode" == "s" ]] && return 0
 
   # print error msg; check providers
+  debug_print "watch() player erro msg"
+  debug_print_vars "watched" "ctrlc" "local" "download"
   if [[ "$watched" == "0" && "$ctrlc" == "0" && "$local" == "0" && "$download" == "0" ]]; then
     color_print "\n$player didn't start, the anime wasn't found, or the episode wasn't found..."
     change_providers
@@ -590,6 +646,7 @@ watch() { #{{{
   # unset -v ans_provider
 
   # continue watching selected
+  debug_print_vars "ans_continue"
   while [[ "$ans_continue" != "n" ]]; do
     continue_watching
   done
@@ -597,9 +654,10 @@ watch() { #{{{
   unset -v ans_continue ans_multi
 
   # update entry
+  debug_print "watch() update entry check"
+  debug_print_vars "download" "watched" "animedl_last" "nr" "no_update"
   # only ask if anime is in list, only if streaming, only if there is something to even update
-  animedl_last=$(echo "$animedl_args" | awk '{print $NF}')
-  if [[ -z "$2" && "$download" == "0" && "$watched" -gt 0 && "$animedl_last" -gt "$nr" && "$no_update" != "1" ]]; then
+  if [[ -z "$2" && "$download" == "0" && "$watched" -gt "0" && "$animedl_last" -ge "$nr" && "$no_update" != "1" ]]; then
     echo "al=$animedl_last, w=$watched, nr=$nr"
     echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
     if [[ -z "$yes" ]]; then read ans_update
@@ -610,6 +668,8 @@ watch() { #{{{
 
     while true; do
       [[ "$ans_update" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_update
+      debug_print "watch() updating entry"
+      debug_print_vars "ans_update"
       case "$ans_update" in
         ""|[yY]*)
           # exit if option r/R was used before
@@ -647,9 +707,11 @@ watch() { #{{{
     done
     unset -v ans_update
   fi
+  debug_print "watch() done"
 } #end of watch() }}}
 
 change_providers() { #{{{
+  debug_print "change_providers()"
   color_print "Check available providers here: https://github.com/justfoolingaround/animdl#providers"
   return
 
@@ -667,12 +729,13 @@ change_providers() { #{{{
       provider="$ans_provider"
       color_print "Now trying $provider. $0 will remember this.\n"
       reset_vars
-      animedl "$player" "$title" $(echo "$animedl_args")
+      animedl "$player" "$title" $(echo "$animedl_last")
       ;;
   esac
 } #}}}
 
 show_function() { #{{{
+  debug_print "show_function()"
   if echo "$tlist" | grep -q "$1" ;then
     color_print "Anime found in list. Proceeding.\n"
     # -n is irelevant if already in list
@@ -684,6 +747,7 @@ show_function() { #{{{
     else ans_add="" && print_noconfirm
     fi
     echo
+    debug_print_vars "ans_add"
     while true; do
       [[ "$ans_add" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_add
       case "$ans_add" in
@@ -713,16 +777,22 @@ show_function() { #{{{
 } #}}}
 
 continue_watching() { #{{{
-  if [[ -z "$yes" && "$ctrlc" == "0" && "$ans_provider" != "n" && "$ferr" != "1" && "$((watched+nr-1))" != "$last" ]]; then
+  debug_print "continue_watching()"
+  debug_print_vars "yes" "download" "ctrlc" "ferr" "animedl_last" "nr" "last"
+
+  if [[ -z "$yes" && "$ctrlc" == "0" && "$ferr" != "1" && "$animedl_last" -lt "$nr" ]]; then
     [[ "$download" == "0" ]] && var="watch" || var="download";
     color_prompt "\nWant to further $var the anime? Enter number for ep. count, [N/0-9]: "
     read ans_continue
   else ans_continue="n"
   fi
+
+  debug_print_vars "ans_continue"
+
   case "$ans_continue" in
     ""|0*|[nN]*)
       ans_continue="n"
-      color_print "Skiping continue..."
+      color_print "Skipping continue..."
       ;;
     [1-9]*) # user wants to continue watching/downloading
       reset_vars
@@ -733,16 +803,17 @@ continue_watching() { #{{{
           ""|[yY]*)
             ans_episode="m"
             color_print "Keeping multi selection."
+            debug_print_vars "ans_multi" "ans_episode"
             ;;
           *)
             ans_episode="n"
             color_print "Switching to normal selection."
+            debug_print_vars "ans_multi" "ans_episode"
             ;;
         esac
       fi
-      # animedl_args will be either '[0-9] [0-9]' or '[0-9]'; get last number
-      animedl_last=$(echo "$animedl_args" | awk '{print $NF}')
       # last was done, so continue from last+1
+      debug_print_vars "ans_continue" "animedl_last"
       if [[ $ans_continue -gt 1 ]]; then
         watching_prompt "$title" "episodes" "#$((animedl_last + 1)) to #$((animedl_last + ans_continue))"
         animedl "$player" "$title" $((animedl_last + 1)) $((animedl_last + ans_continue))
@@ -755,6 +826,8 @@ continue_watching() { #{{{
 } #}}}
 
 watch_another() { #{{{
+  debug_print "watch_another()"
+
   while true; do
     [[ "$ans_another" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_another
     case "$ans_another" in
@@ -773,6 +846,8 @@ watch_another() { #{{{
         ans_another="repeat_prompt" ;;
     esac
   done
+
+  debug_print_vars "ans_another"
 } #}}}
 
 updater() { #{{{
@@ -823,8 +898,8 @@ arguments() { #{{{
   fi
 } #}}}
 
-if ! params="$(getopt -o vhup:i:s:n:a:q:yrd:l:fc \
-                      -l version,help,update,player:,show:,number:,account:,query:,no-confirm,retrieve,download:,local:,frece,covers \
+if ! params="$(getopt -o vhup:i:s:n:a:q:yrd:l:fcg \
+                      -l version,help,update,player:,show:,number:,account:,query:,no-confirm,retrieve,download:,local:,frece,covers,debug \
                       --name "$0" -- "$@")"; then print_options && exit 1; fi
 eval set -- "$params"
 
@@ -848,6 +923,7 @@ while true; do
                      local="1"; download="0"       ;; # Use local media instead of streaming
     -f|--frece)      use_frece="1" ;;
     -c|--covers)     covers="1" ;;
+    -g|--debug)      debug="1" ;;
     --) shift; break ;; # exit loop
   esac
   shift
@@ -858,6 +934,8 @@ check_deps
 set_fzf_covers
 
 if [[ "$show_title" == "" ]]; then
+  debug_print "show_title if"
+  debug_print_vars "show_title"
   while true; do
     get_list
     select_function
@@ -868,6 +946,7 @@ if [[ "$show_title" == "" ]]; then
     \nType list query instead to change list and assume yes: "
     read ans_loop
     unset -v _state
+    debug_print_vars "ans_loop"
     case "$ans_loop" in
       [nN]*)
         color_print "Skipping watching another..."
@@ -879,12 +958,14 @@ if [[ "$show_title" == "" ]]; then
         ;;
     esac
   done
+  debug_print "exit while ans_loop"
 else
+  debug_print "show_title not empty"
   get_list
   show_function "$show_title" "$show_episode"
 fi
 
-# Cleanup
+debug_print "Cleanup"
 [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
 [[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
 reset_all_vars
