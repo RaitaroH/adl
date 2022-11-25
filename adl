@@ -857,35 +857,32 @@ check_player
 check_deps
 set_fzf_covers
 
-case "$show_title" in
-  "")
-    while [[ "$ans_loop" != "n" ]]; do
-      get_list
-      select_function
-
-      [[ "$download" == "0" ]] && _state="watch" || _state="download"
-      color_prompt "\nWant to $_state another anime? [Y/n] \
-      \nType list query instead to change list and assume yes: "
-      read ans_loop
-      unset -v _state
-      case "$ans_loop" in
-        [nN]*)
-          color_print "Skipping watching another..."
-          ans_loop="n"
-          ;;
-        *)
-          watch_another
-          reset_all_vars
-          ;;
-      esac
-    done
-    unset -v ans_loop
-    ;;
-  *)
+if [[ "$show_title" == "" ]]; then
+  while true; do
     get_list
-    show_function "$show_title" "$show_episode"
-    ;;
-esac
+    select_function
+
+    [[ "$download" == "0" ]] && _state="watch" || _state="download"
+    debug_print_vars "download" "_state"
+    color_prompt "\nWant to $_state another anime? [Y/n] \
+    \nType list query instead to change list and assume yes: "
+    read ans_loop
+    unset -v _state
+    case "$ans_loop" in
+      [nN]*)
+        color_print "Skipping watching another..."
+        break
+        ;;
+      *)
+        watch_another
+        reset_all_vars
+        ;;
+    esac
+  done
+else
+  get_list
+  show_function "$show_title" "$show_episode"
+fi
 
 # Cleanup
 [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
