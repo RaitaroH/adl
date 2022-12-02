@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.1.0 \033[0m
+## Version:\033[0;35m 3.1.1 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -243,7 +243,7 @@ set_fzf_covers() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
       fzf --ansi --reverse --cycle +m --prompt "$_fzf_prompt" \
-          --preview "draw_preview {}" --preview-window "left,20%"
+          --preview "draw_preview {}" --preview-window "left,17%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
@@ -658,7 +658,6 @@ watch() { #{{{
   debug_print_vars "download" "watched" "animedl_last" "nr" "no_update"
   # only ask if anime is in list, only if streaming, only if there is something to even update
   if [[ -z "$2" && "$download" == "0" && "$watched" -gt "0" && "$animedl_last" -ge "$nr" && "$no_update" != "1" ]]; then
-    echo "al=$animedl_last, w=$watched, nr=$nr"
     echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
     if [[ -z "$yes" ]]; then read ans_update
     else ans_update="" && print_noconfirm
