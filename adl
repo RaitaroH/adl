@@ -297,18 +297,17 @@ select_function() { #{{{
       fi
 
       cp "$DB_FILE" "$FZF_FILE"
-      readarray -t lines <<< "$(frece print "$DB_FILE")"
-      for line in "${lines[@]}"; do
-        chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
-        # for every in copied database replace that line with the trackma -a "$account" style line
-        # FIXME: this errors on "-q 'completed'" with "sed: -e expression #1, char 166: unterminated `s' command"
-        # occurs on similar anime names, so sequels
-        sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE"
-      done
+      # get tlist format
+      echo "$tlist" > "$ENTRIES_FILE"
+      awk 'BEGIN {FS=OFS=","} FNR==NR{a[NR]=$1;next}{$3=","a[FNR]}1' "$ENTRIES_FILE" "$FZF_FILE" | sed 's/,,/,/g' > "$FZF_FILE.tmp"
+      mv "$FZF_FILE.tmp" "$FZF_FILE"
+      # see https://stackoverflow.com/questions/29487337/replace-a-pipe-delimited-column-using-awk
+      # https://stackoverflow.com/questions/7846476/replace-column-in-one-file-with-column-from-another-using-awk
+      # basically replace 3rd column in FZF_FILE with the coresponding 1st in ENTRIES_FILE
+      # FS=OFS="," because frece has , delimiters
+      # also sed because the third column will look like ,,| instead of ,|
 
       line_number=1
-      # cleanup this file
-      [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
       choice="$(frece print "$FZF_FILE" | \
         while IFS= read -r line ; do
           [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
@@ -319,10 +318,10 @@ select_function() { #{{{
       echo "$choice" | process_list | \
         while IFS= read -r line ; do
           # reuse this file
-          echo "$line" >> "$ENTRIES_FILE"
+          echo "$line" > "$ENTRIES_FILE"
           frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
-      debug_print_vars "entry" "present" "choice"
+      debug_print_vars "present" "choice"
     fi
   else
     # retrieved custom show from adl input
