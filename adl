@@ -65,6 +65,14 @@ reset_all_vars() {
   unset -v ans_episode ans_another
 } #}}}
 
+clean_exit() {
+  debug_print "Cleanup"
+  [[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
+  [[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
+  reset_all_vars
+  color_print "\nThank you for using adl ✨! \nExiting."
+}
+
 # An array of anime that end with a fullstop/period/dot
 # required for trackma updating
 declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu")
@@ -513,8 +521,9 @@ watch() { #{{{
       R - Rewatch/redownload current episode in list
       C - Custom episode
       U - Update entry chosen instead of streaming
-      S - Skip. Choose another show."
-    color_prompt "Your choice? [N/m/0-9/l/a/i/r/c/u/s]: "
+      S - Skip. Choose another show.
+      Q - Quit adl"
+    color_prompt "Your choice? [N/m/0-9/l/a/i/r/c/u/s/q]: "
     if [[ -z "$yes" ]]; then read ans_episode
     else ans_episode="n" && print_noconfirm
     fi
@@ -639,6 +648,9 @@ watch() { #{{{
         color_print "Skipping chosen entry."
         ans_episode="s"
         break ;;
+      [qQ]*)
+        clean_exit
+        exit ;;
       *) ans_episode="repeat_prompt" ;;
     esac
   done
@@ -697,6 +709,7 @@ watch() { #{{{
                   ans_score=$(nonzero "$ans_score")
                   trackma -a "$account" score "$title" "$ans_score" ;;
               esac
+            # ae "$title"
             fi
           fi
           trackma -a "$account" send
@@ -972,8 +985,5 @@ else
   show_function "$show_title" "$show_episode"
 fi
 
-debug_print "Cleanup"
-[[ -e "$ENTRIES_FILE" ]] && rm "$ENTRIES_FILE"
-[[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
-reset_all_vars
-color_print "\nThank you for using adl ✨! \nExiting."
+clean_exit
+exit
