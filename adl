@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.1.1 \033[0m
+## Version:\033[0;35m 3.1.2 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -44,6 +44,8 @@ local="0"
 animedir=""
 # change digit to show that many previous episodes during multi fzf select
 mbuffer="0"
+# how deep to search in directories when using local files; default is to not go in subfolders
+maxdepth="1"
 # To use covers with fzf by default
 # covers="1"
 
@@ -287,9 +289,11 @@ select_function() { #{{{
       echo "$entry" | cut -d'|' -f1 > "$ENTRIES_FILE"
       # Create database
       if [ ! -f "$DB_FILE" ]; then
-          frece init "$DB_FILE" "$ENTRIES_FILE"
+        frece init "$DB_FILE" "$ENTRIES_FILE"
       else
-          frece update "$DB_FILE" "$ENTRIES_FILE" --purge-old
+        # Note: on changing queries --purge-old removes everything
+        # without this, other issues occur
+        frece update "$DB_FILE" "$ENTRIES_FILE" --purge-old
       fi
 
       cp "$DB_FILE" "$FZF_FILE"
@@ -297,6 +301,8 @@ select_function() { #{{{
       for line in "${lines[@]}"; do
         chosen="$(echo "$tlist" | grep "$line" | sed 's/\//\\\//g; s/|/\\|/g; s/\&/\\&/g')"
         # for every in copied database replace that line with the trackma -a "$account" style line
+        # FIXME: this errors on "-q 'completed'" with "sed: -e expression #1, char 166: unterminated `s' command"
+        # occurs on similar anime names, so sequels
         sed -i "/$line/{s/$line/$chosen/g}" "$FZF_FILE"
       done
 
@@ -434,7 +440,10 @@ animedl() { #{{{
     ctrlc="1"
   fi
   if echo "$out" | grep -q "No such file or directory"; then
-    ferr="1"
+    # on animdl this error happens even if the stream works
+    if [[ "$download" != "0" ]]; then
+      ferr="1"
+    fi
   fi
   # it seems like this decrease is not needed anymore
   # [[ "$ctrlc" == "1" ]] && watched=$((watched - 1)) # if Ctrl-C was caught one extra episode was counted
@@ -450,7 +459,7 @@ _down_arg()     { [[ "$download" == "0" ]] && echo "stream" || echo "download" ;
 # following commented as it was used by anime dl; animdl does not have these flags
 # _provider_arg() { [[ "$provider" != ""  ]] && echo "--provider $provider" || echo "" ;}
 _find_files() {
-  find "$1" -maxdepth 1 \
+  find "$1" -maxdepth "$maxdepth" \
     -type l,f \( -name "*.srt" -o -name "*.ass" \) -prune \
     -o -type l,f -name "*" -print | sort
 }
