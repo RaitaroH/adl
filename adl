@@ -863,6 +863,7 @@ continue_watching() { #{{{
 
 watch_another() { #{{{
   debug_print "watch_another()"
+  debug_print_vars "ans_loop" "ans_another"
 
   while true; do
     [[ "$ans_another" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_another
@@ -989,6 +990,7 @@ if [[ "$show_title" == "" ]]; then
         break
         ;;
       *)
+        ans_another="$ans_loop"
         watch_another
         reset_all_vars
         ;;
