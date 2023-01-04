@@ -182,13 +182,13 @@ get_list()        { #{{{
       # see https://github.com/z411/trackma/issues/79
       # LINES and COLUMNS vars for long titles
       # see https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818
-      tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=130 trackma -a "$account" - | \
+      tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=250 trackma -a "$account" - | \
               sed -n '/[[:space:]].1/,${p;/results/q}' | head -n -1)
     ;;
     "watching")
       # the above works with query=watching, but that method is hacky
       # using official way for best compatability
-      tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
+      tlist=$(LINES=25 COLUMNS=250 trackma -a "$account" list | head -n -2 | tail -n +2)
     ;;
   esac
   if [[ "$tlist" == "" ]]; then
@@ -197,13 +197,32 @@ get_list()        { #{{{
     exit 1
   fi
 } #}}}
-process_list()    {
-  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|/g'
-}
+
 # {{{
+regex="^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|"
 # Entry manipulation explination ...
 # \x1b is removing color formating and everything untill the first letter it finds
 # the rest is a regexp; the \n are references: \1=title | \2=current ep | \3=all ep | \4=score |
+# note that this will not work if the trackma output gets cutoff; COLUMNS=250 to avoid issues
+
+process_list()    {
+  perl -pe "s/\x1b\[[0-9;]*m//g ; s/${regex}/g"
+}
+fzf_process_list() {
+  perl -pe "s/${regex}/g" |\
+    awk -F'|' '{printf "%-2s",NR} {printf "%6s - %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
+  # print columns in the format INDEX CURRENT - LAST SCORE TITLE with proper padding
+}
+get_entry() {
+  debug_print "get_entry()"
+  fzf_selection="$(echo "$tlist" | fzf_process_list | fzf_select )"
+  # now get the line number from selection
+  line_nr=$(echo "$fzf_selection" | awk '{print $1}')
+  # find the entry from tlist that has that number so we have the expected |||| format
+  entry="$(echo "$tlist" | sed -n "$line_nr p" | process_list)"
+  present=""
+  debug_print_vars "fzf_selection" "line_nr" "entry"
+}
 # }}}
 
 # Covers functions using ueberzug {{{
@@ -245,21 +264,20 @@ set_fzf_covers() {
   debug_print_vars "covers"
   if [[ "$covers" == "1" ]]; then
     check_covers
-    _fzf_prompt="Colored entries are Airing. Type to search. Press enter to select "
     # export is needed so it can work in fzf --preview
     export -f draw_preview
     export -f adl_covers
     fzf_select() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
-      fzf --ansi --reverse --cycle +m --prompt "$_fzf_prompt" \
+      fzf --ansi --reverse --cycle +m --prompt "Index    Count    Score   Title: "\
           --preview "draw_preview {}" --preview-window "left,17%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle +m --prompt "$_fzf_prompt" \
+      fzf --ansi --reverse --cycle +m --prompt "Index    Count    Score   Title: "\
           --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
@@ -286,13 +304,11 @@ select_function() { #{{{
   local present entry lines line line_number chosen choice
   if [[ -z "$1" ]]; then
     if [[ -z "$use_frece" ]]; then
-      entry="$(echo "$tlist" | fzf_select | process_list)"
-      present=""
+      get_entry
     else
       debug_print "select_function() > frece"
       check_dep "frece"
       entry="$(echo "$tlist" | process_list)"
-      present=""
 
       echo "$entry" | cut -d'|' -f1 > "$ENTRIES_FILE"
       # Create database
@@ -315,21 +331,20 @@ select_function() { #{{{
       # FS=OFS="," because frece has , delimiters
       # also sed because the third column will look like ,,| instead of ,|
 
-      line_number=1
-      choice="$(frece print "$FZF_FILE" | \
-        while IFS= read -r line ; do
-          [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
-          echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
-          ((line_number++)); done | fzf_select)"
+      debug_print "frece print"
+      tlist="$(frece print "$FZF_FILE")"
+      get_entry
+
+      debug_print_vars "entry"
       # deal with ctrlc at fzf for frece; otherwise will print "Entry not found in database"
-      [[ "$choice" == "" ]] && print_noselect && return 0
-      echo "$choice" | process_list | \
+      [[ "$entry" == "" ]] && print_noselect && return 0
+      echo "$entry" | \
         while IFS= read -r line ; do
           # reuse this file
           echo "$line" > "$ENTRIES_FILE"
           frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
-      debug_print_vars "present" "choice"
+      debug_print_vars "present" "entry" "line"
     fi
   else
     # retrieved custom show from adl input
