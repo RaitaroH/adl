@@ -210,7 +210,7 @@ process_list()    {
 }
 fzf_process_list() {
   perl -pe "s/${regex}/g" |\
-    awk -F'|' '{printf "%-2s",NR} {printf "%6s - %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
+    awk -F'|' '{printf "%-4s",NR} {printf "%6s - %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
   # print columns in the format INDEX CURRENT - LAST SCORE TITLE with proper padding
   # %s\n has a special space character before it (U+2008) for easier title getting
 }
@@ -272,14 +272,14 @@ set_fzf_covers() {
     fzf_select() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
-      fzf --ansi --reverse --cycle +m --prompt "Index    Count    Score   Title: "\
+      fzf --ansi --reverse --cycle +m --prompt "Index      Count    Score   Title: "\
           --preview "draw_preview {}" --preview-window "left,17%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle +m --prompt "Index    Count    Score   Title: "\
+      fzf --ansi --reverse --cycle +m --prompt "Index      Count    Score   Title: "\
           --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
@@ -326,6 +326,7 @@ select_function() { #{{{
       cp "$DB_FILE" "$FZF_FILE"
       # get tlist format
       echo "$tlist" > "$ENTRIES_FILE"
+      # FIXME: this causes issues with anime names that have , in the name
       awk 'BEGIN {FS=OFS=","} FNR==NR{a[NR]=$1;next}{$3=","a[FNR]}1' "$ENTRIES_FILE" "$FZF_FILE" | sed 's/,,/,/g' > "$FZF_FILE.tmp"
       mv "$FZF_FILE.tmp" "$FZF_FILE"
       # see https://stackoverflow.com/questions/29487337/replace-a-pipe-delimited-column-using-awk
