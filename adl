@@ -272,14 +272,14 @@ set_fzf_covers() {
     fzf_select() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
-      fzf --ansi --reverse --cycle +m --prompt "Index      Count    Score   Title: "\
+      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
           --preview "draw_preview {}" --preview-window "left,17%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle +m --prompt "Index      Count    Score   Title: "\
+      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
           --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
     }
   fi
