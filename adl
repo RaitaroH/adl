@@ -210,8 +210,8 @@ process_list()    {
 }
 fzf_process_list() {
   perl -pe "s/${regex}/g" |\
-    awk -F'|' '{printf "%-4s",NR} {printf "%6s - %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
-  # print columns in the format INDEX CURRENT - LAST SCORE TITLE with proper padding
+    awk -F'|' '{printf "%-4s",NR} {printf "%6s / %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
+  # print columns in the format INDEX CURRENT / LAST SCORE TITLE with proper padding
   # %s\n has a special space character before it (U+2008) for easier title getting
 }
 get_entry() {
