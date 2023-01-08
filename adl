@@ -715,19 +715,24 @@ watch() { #{{{
           if [[ "$last" == "?" ]]; then
             trackma -a "$account" update "$title" "$nr"
           else
-            [[ $nr -le $last ]] && trackma -a "$account" update "$title" "$nr" || trackma -a "$account" update "$title" "$last"
-            if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
-              color_prompt "\nAnime will be set to completed. \
-                \nAlso rate the anime [N]? Type score to assume yes: "
-              read ans_score
-              case "$ans_score" in
-                ""|[nN]*)
-                  color_print "Skipping scoring..." ;;
-                *)
-                  ans_score=$(nonzero "$ans_score")
-                  trackma -a "$account" score "$title" "$ans_score" ;;
-              esac
-            # ae "$title"
+            if [[ "$nr" -ge "$last" ]]; then
+              # code that will run after show is complete
+              trackma -a "$account" update "$title" "$last"
+              # ae "$title"
+              if [[ "$score" == "0" ]]; then
+                color_prompt "\nAnime will be set to completed. \
+                  \nAlso rate the anime [N]? Type score to assume yes: "
+                read ans_score
+                case "$ans_score" in
+                  ""|[nN]*)
+                    color_print "Skipping scoring..." ;;
+                  *)
+                    ans_score=$(nonzero "$ans_score")
+                    trackma -a "$account" score "$title" "$ans_score" ;;
+                esac
+              fi
+            else
+              trackma -a "$account" update "$title" "$nr"
             fi
           fi
           trackma -a "$account" send
