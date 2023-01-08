@@ -818,12 +818,15 @@ continue_watching() { #{{{
   debug_print "continue_watching()"
   debug_print_vars "yes" "download" "ctrlc" "ferr" "animedl_last" "nr" "last"
 
-  if [[ -z "$yes" && "$ctrlc" == "0" && "$ferr" != "1" && "$animedl_last" -lt "$last" ]]; then
+  # deal with last=? error
+  [[ "$last" == "?" ]] && _last="$((nr + 1))" || _last="$last"
+  if [[ -z "$yes" && "$ctrlc" == "0" && "$ferr" != "1" && "$animedl_last" -lt "$_last" ]]; then
     [[ "$download" == "0" ]] && var="watch" || var="download";
     color_prompt "\nWant to further $var the anime? Enter number for ep. count, [N/0-9]: "
     read ans_continue
   else ans_continue="n"
   fi
+  unset -v _last
 
   debug_print_vars "ans_continue"
 
