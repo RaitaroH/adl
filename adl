@@ -17,8 +17,8 @@
 ##   -q, --query       By default trackma will list watching. Use \033[0;36m$adl -q "query"\033[0m to change the list.
 ##                     Available queries: watching, completed, rewatching, paused, dropped, plantowatch;
 ##   -u, --update      Update this script from github master;
-##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug;
-##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode
+##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug; use at your own risk;
+##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -279,8 +279,9 @@ set_fzf_covers() {
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
-          --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "
+          # --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+		  # let's not show this as ueberzug has been archived by the author
     }
   fi
 }
