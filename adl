@@ -17,8 +17,8 @@
 ##   -q, --query       By default trackma will list watching. Use \033[0;36m$adl -q "query"\033[0m to change the list.
 ##                     Available queries: watching, completed, rewatching, paused, dropped, plantowatch;
 ##   -u, --update      Update this script from github master;
-##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug;
-##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode
+##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug; use at your own risk;
+##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
 
@@ -48,6 +48,14 @@ mbuffer="0"
 maxdepth="1"
 # To use covers with fzf by default
 # covers="1"
+
+# colors not used in help because it doesn't work there
+_cr="\033[;31m" # red
+_cb="\033[;34m" # blue
+_cy="\033[;33m" # yellow
+_cv="\033[;35m" # violet
+_cg="\033[;36m" # cyan
+_cd="\033[0m"   # default
 
 # Functions to reset some vars
 reset_vars() { #{{{
@@ -139,8 +147,8 @@ check_covers() { #{{{
   check_dep "wget"
 } #}}}
 trap_ctrlc()      { ctrlc=1 ;}
-color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
-color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
+color_print()     { echo -e "$_cg$* $_cd" ;} #for normal output
+color_prompt()    { echo -en "$_cb$*$_cd" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
 print_options()   { print_help | tail +5 ;}
@@ -150,17 +158,17 @@ print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" 
 watching_prompt() {
   debug_print "watching_prompt()"
   [[ "$download" == "0" ]] && var="watching" || var="downloading"
-  echo -e "\nNow $var \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m"
+  echo -e "\nNow $var $_cb$1$_cd, $2 $_cb$3 $_cd"
 }
 debug_print()     {
   if [[ "$debug" == "1" ]]; then
-    echo -e "\033[0;31m--- $* --- \033[0m"
+    echo -e "$_cr--- $* --- $_cd"
   fi
 }
 debug_print_vars() {
   if [[ "$debug" == "1" ]]; then
     for i in "$@"; do
-      echo -e "\033[0;31m    -$i = ${!i} \033[0m"
+      echo -e "$_cr    -$i = ${!i} $_cd"
     done
   fi
 }
@@ -182,13 +190,13 @@ get_list()        { #{{{
       # see https://github.com/z411/trackma/issues/79
       # LINES and COLUMNS vars for long titles
       # see https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818
-      tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=130 trackma -a "$account" - | \
+      tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=250 trackma -a "$account" - | \
               sed -n '/[[:space:]].1/,${p;/results/q}' | head -n -1)
     ;;
     "watching")
       # the above works with query=watching, but that method is hacky
       # using official way for best compatability
-      tlist=$(LINES=25 COLUMNS=130 trackma -a "$account" list | head -n -2 | tail -n +2)
+      tlist=$(LINES=25 COLUMNS=250 trackma -a "$account" list | head -n -2 | tail -n +2)
     ;;
   esac
   if [[ "$tlist" == "" ]]; then
@@ -197,13 +205,33 @@ get_list()        { #{{{
     exit 1
   fi
 } #}}}
-process_list()    {
-  perl -pe 's/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|/g'
-}
+
 # {{{
+regex="^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1|\2|\3|\4|"
 # Entry manipulation explination ...
 # \x1b is removing color formating and everything untill the first letter it finds
 # the rest is a regexp; the \n are references: \1=title | \2=current ep | \3=all ep | \4=score |
+# note that this will not work if the trackma output gets cutoff; COLUMNS=250 to avoid issues
+
+process_list()    {
+  perl -pe "s/\x1b\[[0-9;]*m//g ; s/${regex}/g"
+}
+fzf_process_list() {
+  perl -pe "s/${regex}/g" |\
+    awk -F'|' '{printf "%-4s",NR} {printf "%6s / %-5s",$2,$3} {printf " %-6s %s\n",$4,$1}'
+  # print columns in the format INDEX CURRENT / LAST SCORE TITLE with proper padding
+  # %s\n has a special space character before it (U+2008) for easier title getting
+}
+get_entry() {
+  debug_print "get_entry()"
+  fzf_selection="$(echo "$tlist" | fzf_process_list | fzf_select )"
+  # now get the line number from selection
+  line_nr=$(echo "$fzf_selection" | awk '{print $1}')
+  # find the entry from tlist that has that number so we have the expected |||| format
+  entry="$(echo "$tlist" | sed -n "$line_nr p" | process_list)"
+  present=""
+  debug_print_vars "fzf_selection" "line_nr" "entry"
+}
 # }}}
 
 # Covers functions using ueberzug {{{
@@ -229,7 +257,8 @@ start_ueberzug() {
 }
 draw_preview() {
   local img
-  img=$(echo "${@}" | perl -pe "s/\x1b\[[0-9;]*m//g ; s/^.+?[^\s]\s+(.+?(?=\.\.))\.+\ +(\d+).[^\d]\ (\d+|\?)\s+(\d*[.]?\d+).+$/\1/g")
+  # get anime title by replacing special space character
+  img=$(echo "${@}" | sed 's/^[^ ]* //')
   [ ! -s "/tmp/$img.png" ] && adl_covers "$img"
 
   >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
@@ -245,22 +274,24 @@ set_fzf_covers() {
   debug_print_vars "covers"
   if [[ "$covers" == "1" ]]; then
     check_covers
-    _fzf_prompt="Colored entries are Airing. Type to search. Press enter to select "
     # export is needed so it can work in fzf --preview
     export -f draw_preview
     export -f adl_covers
     fzf_select() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
-      fzf --ansi --reverse --cycle +m --prompt "$_fzf_prompt" \
+      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
           --preview "draw_preview {}" --preview-window "left,17%"
       pkill ueberzug
       rm "${UEBERZUG_FIFO}"
     }
   else
     fzf_select() {
-      fzf --ansi --reverse --cycle +m --prompt "$_fzf_prompt" \
-          --preview "echo 'adl has now cover support. Try \$adl -c.'" --preview-window "down,5%"
+      fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
+          --preview "echo -e '$_cb''Airing & Caught up     $_cr Airing & Behind     $_cd Finished airing'"\
+          --preview-window "down,5%"
+          # --preview "echo 'adl has now cover support. Try \$adl -c.'"\
+          # let's not show this as ueberzug has been archived by the author
     }
   fi
 }
@@ -286,13 +317,12 @@ select_function() { #{{{
   local present entry lines line line_number chosen choice
   if [[ -z "$1" ]]; then
     if [[ -z "$use_frece" ]]; then
-      entry="$(echo "$tlist" | fzf_select | process_list)"
-      present=""
+      get_entry
+      [[ "$fzf_selection" == "" ]] && print_noselect && return 0
     else
       debug_print "select_function() > frece"
       check_dep "frece"
       entry="$(echo "$tlist" | process_list)"
-      present=""
 
       echo "$entry" | cut -d'|' -f1 > "$ENTRIES_FILE"
       # Create database
@@ -307,6 +337,7 @@ select_function() { #{{{
       cp "$DB_FILE" "$FZF_FILE"
       # get tlist format
       echo "$tlist" > "$ENTRIES_FILE"
+      # FIXME: this causes issues with anime names that have , in the name
       awk 'BEGIN {FS=OFS=","} FNR==NR{a[NR]=$1;next}{$3=","a[FNR]}1' "$ENTRIES_FILE" "$FZF_FILE" | sed 's/,,/,/g' > "$FZF_FILE.tmp"
       mv "$FZF_FILE.tmp" "$FZF_FILE"
       # see https://stackoverflow.com/questions/29487337/replace-a-pipe-delimited-column-using-awk
@@ -315,21 +346,18 @@ select_function() { #{{{
       # FS=OFS="," because frece has , delimiters
       # also sed because the third column will look like ,,| instead of ,|
 
-      line_number=1
-      choice="$(frece print "$FZF_FILE" | \
-        while IFS= read -r line ; do
-          [[ $line_number -lt 10 ]] && echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\ \  /; s/^/|   /" || \
-          echo "$line" | sed -e "s/\(.\{9\}\)//; s/^/${line_number}\  /; s/^/|   /"
-          ((line_number++)); done | fzf_select)"
+      tlist="$(frece print "$FZF_FILE")"
+      get_entry
       # deal with ctrlc at fzf for frece; otherwise will print "Entry not found in database"
-      [[ "$choice" == "" ]] && print_noselect && return 0
-      echo "$choice" | process_list | \
+      [[ "$fzf_selection" == "" ]] && print_noselect && return 0
+
+      echo "$entry" | \
         while IFS= read -r line ; do
           # reuse this file
           echo "$line" > "$ENTRIES_FILE"
           frece increment "$DB_FILE" "$(echo "$line" | cut -d'|' -f1)"
         done
-      debug_print_vars "present" "choice"
+      debug_print_vars "present" "entry" "line"
     fi
   else
     # retrieved custom show from adl input
@@ -678,7 +706,7 @@ watch() { #{{{
   debug_print_vars "download" "watched" "animedl_last" "nr" "no_update"
   # only ask if anime is in list, only if streaming, only if there is something to even update
   if [[ -z "$2" && "$download" == "0" && "$watched" -gt "0" && "$animedl_last" -ge "$nr" && "$no_update" != "1" ]]; then
-    echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
+    echo -en "$_cb""Increase nr in anime list by $_cd$watched$_cb? Yes, no, or custom number [Y/n/0-9]: $_cd"
     if [[ -z "$yes" ]]; then read ans_update
     else ans_update="" && print_noconfirm
     fi
@@ -697,19 +725,24 @@ watch() { #{{{
           if [[ "$last" == "?" ]]; then
             trackma -a "$account" update "$title" "$nr"
           else
-            [[ $nr -le $last ]] && trackma -a "$account" update "$title" "$nr" || trackma -a "$account" update "$title" "$last"
-            if [[ $score == 0 ]] && [[ $nr -ge $last ]] ; then
-              color_prompt "\nAnime will be set to completed. \
-                \nAlso rate the anime [N]? Type score to assume yes: "
-              read ans_score
-              case "$ans_score" in
-                ""|[nN]*)
-                  color_print "Skipping scoring..." ;;
-                *)
-                  ans_score=$(nonzero "$ans_score")
-                  trackma -a "$account" score "$title" "$ans_score" ;;
-              esac
-            # ae "$title"
+            if [[ "$nr" -ge "$last" ]]; then
+              # code that will run after show is complete
+              trackma -a "$account" update "$title" "$last"
+              # ae "$title"
+              if [[ "$score" == "0" ]]; then
+                color_prompt "\nAnime will be set to completed. \
+                  \nAlso rate the anime [N]? Type score to assume yes: "
+                read ans_score
+                case "$ans_score" in
+                  ""|[nN]*)
+                    color_print "Skipping scoring..." ;;
+                  *)
+                    ans_score=$(nonzero "$ans_score")
+                    trackma -a "$account" score "$title" "$ans_score" ;;
+                esac
+              fi
+            else
+              trackma -a "$account" update "$title" "$nr"
             fi
           fi
           trackma -a "$account" send
@@ -800,12 +833,15 @@ continue_watching() { #{{{
   debug_print "continue_watching()"
   debug_print_vars "yes" "download" "ctrlc" "ferr" "animedl_last" "nr" "last"
 
-  if [[ -z "$yes" && "$ctrlc" == "0" && "$ferr" != "1" && "$animedl_last" -lt "$last" ]]; then
+  # deal with last=? error
+  [[ "$last" == "?" ]] && _last="$((nr + 1))" || _last="$last"
+  if [[ -z "$yes" && "$ctrlc" == "0" && "$ferr" != "1" && "$animedl_last" -lt "$_last" ]]; then
     [[ "$download" == "0" ]] && var="watch" || var="download";
     color_prompt "\nWant to further $var the anime? Enter number for ep. count, [N/0-9]: "
     read ans_continue
   else ans_continue="n"
   fi
+  unset -v _last
 
   debug_print_vars "ans_continue"
 
@@ -847,6 +883,7 @@ continue_watching() { #{{{
 
 watch_another() { #{{{
   debug_print "watch_another()"
+  debug_print_vars "ans_loop" "ans_another"
 
   while true; do
     [[ "$ans_another" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " ans_another
@@ -875,7 +912,7 @@ updater() { #{{{
   local DIR=$(cd "$(dirname "$0")" || exit ; pwd)
   local FILE=$(basename "$0")
   local MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
-  printf "\033[0;31m%s\033[0m" "$MESSAGE" #red warning
+  printf "$_cr%s$_cd" "$MESSAGE" #red warning
   # integration with -y option crossed my mind but it is unwise
   local updater_ans
   read updater_ans
@@ -973,6 +1010,7 @@ if [[ "$show_title" == "" ]]; then
         break
         ;;
       *)
+        ans_another="$ans_loop"
         watch_another
         reset_all_vars
         ;;
