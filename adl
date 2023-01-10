@@ -79,6 +79,7 @@ clean_exit() {
   [[ -e "$FZF_FILE" ]] && rm "$FZF_FILE"
   reset_all_vars
   color_print "\nThank you for using adl ✨! \nExiting."
+  check_for_updates
 }
 
 # An array of anime that end with a fullstop/period/dot
@@ -920,21 +921,11 @@ updater() { #{{{
     [[ "$updater_ans" == "repeat_prompt" ]] && read -p "Not an option. Retype your choice: " updater_ans
     case "$updater_ans" in
       [yY]*)
-        # color_prompt "\nadl can be updated from master or develop. Which one do you choose? [M/d]: "
-        # read -r source_ans
-        # case "$source_ans" in
-        #   ""|"M"|"m")
-        #     source="master"
-        #     wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE" ;;
-        #   "d"|"D")
-        #     source="develop"
-        #     wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/develop/adl" -O "$DIR/$FILE" ;;
-        #   *)
-        #     color_print "Not an actual option. Exiting..."
-        #     exit 1 ;;
-        # esac
-        wget -q --show-progress "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE"
-        color_print "\n✓ Update from master is complete."
+        if wget --quiet "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$DIR/$FILE"; then
+          color_print "\n✓ Update from master is complete."
+        else
+          echo -e "$_cr""Update failed. Try updating from AUR, or use 'sudo adl -u'"
+        fi
         break ;;
       ""|[nN]*)
         color_print "Update aborted."
@@ -942,7 +933,22 @@ updater() { #{{{
       *) updater_ans="repeat_prompt" ;;
     esac
   done
-} #}}}
+}
+check_for_updates() {
+  local git_file="/tmp/adl"
+  if [[ ! -e "$git_file" ]]; then
+    wget --quiet "https://raw.githubusercontent.com/RaitaroH/adl/master/adl" -O "$git_file"
+  fi
+  local thisv gitv
+  # using sed to make the numbers integers
+  thisv=$(print_version | awk '{print $2}' | sed 's/\.//g')
+  # it is #3 here because ## are not removed
+  gitv=$(grep 'Version' "$git_file" | awk '{print $3}' | sed 's/\.//g')
+  if [[ "$gitv" -gt "$thisv" ]]; then
+    printf "$_cr%s$_cd\n" "adl is outdated! Update using 'adl -u', or however you can."
+  fi
+}
+#}}}
 
 arguments() { #{{{
   # check if option is interpreted as argument for previous option; match getopt error format
