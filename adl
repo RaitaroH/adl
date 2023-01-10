@@ -49,6 +49,14 @@ maxdepth="1"
 # To use covers with fzf by default
 # covers="1"
 
+# colors not used in help because it doesn't work there
+_cr="\033[;31m" # red
+_cb="\033[;34m" # blue
+_cy="\033[;33m" # yellow
+_cv="\033[;35m" # violet
+_cg="\033[;36m" # cyan
+_cd="\033[0m"   # default
+
 # Functions to reset some vars
 reset_vars() { #{{{
   debug_print "reset_vars()"
@@ -139,8 +147,8 @@ check_covers() { #{{{
   check_dep "wget"
 } #}}}
 trap_ctrlc()      { ctrlc=1 ;}
-color_print()     { echo -e "\033[0;36m$* \033[0m" ;} #for normal output
-color_prompt()    { echo -en "\033[0;34m$*\033[0m" ;} #for user input
+color_print()     { echo -e "$_cg$* $_cd" ;} #for normal output
+color_prompt()    { echo -en "$_cb$*$_cd" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
 print_options()   { print_help | tail +5 ;}
@@ -150,17 +158,17 @@ print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" 
 watching_prompt() {
   debug_print "watching_prompt()"
   [[ "$download" == "0" ]] && var="watching" || var="downloading"
-  echo -e "\nNow $var \033[0;34m$1\033[0m, $2 \033[0;34m$3 \033[0m"
+  echo -e "\nNow $var $_cb$1$_cd, $2 $_cb$3 $_cd"
 }
 debug_print()     {
   if [[ "$debug" == "1" ]]; then
-    echo -e "\033[0;31m--- $* --- \033[0m"
+    echo -e "$_cr--- $* --- $_cd"
   fi
 }
 debug_print_vars() {
   if [[ "$debug" == "1" ]]; then
     for i in "$@"; do
-      echo -e "\033[0;31m    -$i = ${!i} \033[0m"
+      echo -e "$_cr    -$i = ${!i} $_cd"
     done
   fi
 }
@@ -280,7 +288,7 @@ set_fzf_covers() {
   else
     fzf_select() {
       fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
-          --preview "echo -e '\033[;34mAiring & Caught up     \033[;31mAiring & Behind      \033[0mFinished airing'"\
+          --preview "echo -e '$_cb''Airing & Caught up     $_cr Airing & Behind     $_cd Finished airing'"\
           --preview-window "down,5%"
           # --preview "echo 'adl has now cover support. Try \$adl -c.'"\
           # let's not show this as ueberzug has been archived by the author
@@ -698,7 +706,7 @@ watch() { #{{{
   debug_print_vars "download" "watched" "animedl_last" "nr" "no_update"
   # only ask if anime is in list, only if streaming, only if there is something to even update
   if [[ -z "$2" && "$download" == "0" && "$watched" -gt "0" && "$animedl_last" -ge "$nr" && "$no_update" != "1" ]]; then
-    echo -en "\033[0;34mIncrease nr in anime list by \033[0m$watched\033[0;34m? Yes, no, or custom number [Y/n/0-9]: \033[0m"
+    echo -en "$_cb""Increase nr in anime list by $_cd$watched$_cb? Yes, no, or custom number [Y/n/0-9]: $_cd"
     if [[ -z "$yes" ]]; then read ans_update
     else ans_update="" && print_noconfirm
     fi
@@ -904,7 +912,7 @@ updater() { #{{{
   local DIR=$(cd "$(dirname "$0")" || exit ; pwd)
   local FILE=$(basename "$0")
   local MESSAGE="WARNING: $0 will now overwrite itself at the path: $DIR/$FILE. Proceed? [y/N]: "
-  printf "\033[0;31m%s\033[0m" "$MESSAGE" #red warning
+  printf "$_cr%s$_cd" "$MESSAGE" #red warning
   # integration with -y option crossed my mind but it is unwise
   local updater_ans
   read updater_ans
