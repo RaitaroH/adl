@@ -12,6 +12,8 @@
   </p>
 
   ![](./images/terminal.svg)
+ 
+  Note: any visual glitches in the above are caused by the terminal recorder.
 </div>
 
 ## Features
@@ -36,17 +38,20 @@
     format*;
   - to avoid *Scans* and other such extras, the `find` maxdepth is set to *1*,
     as such don't have folders inside folders; use a *symlink* instead, or change
-    the maxdepth value.
-+ download covers from anilist and show them in the terminal;
+    the maxdepth variable.
 + do not display verbose vlc output;
-+ warn user if episode wasn't found.
++ warn user if episode wasn't found;
++ download covers from anilist and show them in the terminal. Example:
+<div align="center">
+  <img src="./images/covers.png" width="700" />
+</div>
 
 ## Requirements
 **Note**: [vn-ki/anime-downloader](https://github.com/vn-ki/anime-downloader) seems to be depricated. As such I have ported to animdl.
   
 + [animdl](https://github.com/justfoolingaround/animdl) - make sure this works. Settings for animdl, such as provider, need to be placed in your [configuration file](https://github.com/justfoolingaround/animdl#configurations).
 + [z411/trackma](https://github.com/z411/trackma) - tested with anilist (you need to set up trackma before using adl). Also adl now needs the following [PR merge](https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818) that fixes issue [#9](https://github.com/RaitaroH/adl/issues/9);
-+ [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection.
++ [junegunn/fzf](https://github.com/junegunn/fzf) - needed for show selection and cover previews.
   Make sure you install the latest version from github to prevent issue [#35](https://github.com/RaitaroH/adl/issues/35);
 + [MPV](https://mpv.io/) - used to play the anime (better integration with anime-downloader). [VLC](https://www.videolan.org/vlc/) can also be used: `$adl -p vlc`;
 + **perl** - for regular expressions;
