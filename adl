@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.2.0 \033[0m
+## Version:\033[0;35m 3.2.1 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -943,7 +943,7 @@ check_for_updates() {
   # using sed to make the numbers integers
   thisv=$(print_version | awk '{print $2}' | sed 's/\.//g')
   # it is #3 here because ## are not removed
-  gitv=$(grep 'Version' "$git_file" | awk '{print $3}' | sed 's/\.//g')
+  gitv=$(grep 'Version' "$git_file" | head -n1 | awk '{print $3}' | sed 's/\.//g')
   if [[ "$gitv" -gt "$thisv" ]]; then
     printf "$_cr%s$_cd\n" "adl is outdated! Update using 'adl -u', or however you can."
   fi
