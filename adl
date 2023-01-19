@@ -48,6 +48,7 @@ mbuffer="0"
 maxdepth="1"
 # To use covers with fzf by default
 # covers="1"
+COVERS_DIR="$HOME/.cache/adl"
 
 # colors not used in help because it doesn't work there
 _cr="\033[;31m" # red
@@ -146,6 +147,7 @@ check_covers() { #{{{
   fi
   check_dep "curl"
   check_dep "wget"
+  mkdir -p "$COVERS_DIR"
 } #}}}
 trap_ctrlc()      { ctrlc=1 ;}
 color_print()     { echo -e "$_cg$* $_cd" ;} #for normal output
@@ -244,7 +246,7 @@ adl_covers() {
     --silent -X POST -H 'content-type: application/json' -H 'accept: application/json' \
     --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$1\"}}")
   url=$(echo "$url" | sed -n 's/\\//g; s/.*"\(http.*\)".*/\1/p')
-  wget --quiet "$url" -O "/tmp/$1.png"
+  wget --quiet "$url" -O "$COVERS_DIR/$1.png"
 }
 UEBERZUG_FIFO="$(mktemp --dry-run --suffix "fzf-$$-ueberzug")"
 declare -r -x UEBERZUG_FIFO
@@ -260,14 +262,14 @@ draw_preview() {
   local img
   # get anime title by replacing special space character
   img=$(echo "${@}" | sed 's/^[^ ]* //')
-  [ ! -s "/tmp/$img.png" ] && adl_covers "$img"
+  [ ! -s "$COVERS_DIR/$img.png" ] && adl_covers "$img"
 
   >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
       [action]=add [identifier]="preview" \
       [x]="2" [y]="1" \
       [width]="$((COLUMNS-2))" [height]="$((LINES-3))" \
       [scaler]=fit_contain [scaling_position_x]=0.5 [scaling_position_y]=0.5 \
-      [path]="/tmp/$img.png")
+      [path]="$COVERS_DIR/$img.png")
       # add [synchronously_draw]=True if you want to see each change
 }
 set_fzf_covers() {
@@ -275,9 +277,13 @@ set_fzf_covers() {
   debug_print_vars "covers"
   if [[ "$covers" == "1" ]]; then
     check_covers
+
     # export is needed so it can work in fzf --preview
     export -f draw_preview
     export -f adl_covers
+    # otherwise permission denied in ueberzug
+    export COVERS_DIR
+
     fzf_select() {
       start_ueberzug
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
