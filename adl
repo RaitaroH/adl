@@ -342,16 +342,17 @@ select_function() { #{{{
       fi
 
       cp "$DB_FILE" "$FZF_FILE"
+      # to avoid issues with , in anime names, use special separator; then replace all back to , from 2nd onwards
+      sed -i "y/,/█/; s/█/,/3g" "$FZF_FILE"
       # get tlist format
-      echo "$tlist" > "$ENTRIES_FILE"
-      # FIXME: this causes issues with anime names that have , in the name
-      awk 'BEGIN {FS=OFS=","} FNR==NR{a[NR]=$1;next}{$3=","a[FNR]}1' "$ENTRIES_FILE" "$FZF_FILE" | sed 's/,,/,/g' > "$FZF_FILE.tmp"
+      echo "$tlist"  > "$ENTRIES_FILE"
+      awk 'BEGIN {FS=OFS="█"} FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' "$ENTRIES_FILE" "$FZF_FILE" | sed "s/█/,/g" > "$FZF_FILE.tmp"
       mv "$FZF_FILE.tmp" "$FZF_FILE"
       # see https://stackoverflow.com/questions/29487337/replace-a-pipe-delimited-column-using-awk
       # https://stackoverflow.com/questions/7846476/replace-column-in-one-file-with-column-from-another-using-awk
       # basically replace 3rd column in FZF_FILE with the coresponding 1st in ENTRIES_FILE
-      # FS=OFS="," because frece has , delimiters
-      # also sed because the third column will look like ,,| instead of ,|
+      # FS=OFS="█" is the seperator
+      # also sed to replace the blocks back into , for frece
 
       tlist="$(frece print "$FZF_FILE")"
       get_entry
