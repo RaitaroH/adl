@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.2.3 \033[0m
+## Version:\033[0;35m 3.2.4 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -85,7 +85,7 @@ clean_exit() {
 
 # An array of anime that end with a fullstop/period/dot
 # required for trackma updating
-declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu")
+declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu" "ef: a tale of memories." "ef: a tale of melodies.")
 check_exceptions() {
   debug_print "check_exceptions()"
   # test if an anime title has a period at the end or not. If yes add one
