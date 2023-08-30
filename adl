@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.2.5 \033[0m
+## Version:\033[0;35m 3.2.6 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -154,8 +154,8 @@ color_print()     { echo -e "$_cg$* $_cd" ;} #for normal output
 color_prompt()    { echo -en "$_cb$*$_cd" ;} #for user input
 print_help()      { echo -e "$(sed -n "s/##\ //p" "$0")" ;} # more compact than { grep "^##" "$0" | sed -e "s/^...//" ;}
 print_queries()   { print_help | grep 'queries' | sed -e 's/^[ \t]*//' ;}
-print_options()   { print_help | tail +5 ;}
-print_version()   { print_help | head -1 ;}
+print_options()   { print_help | sed '1,4d' ;} # delete first 4 lines
+print_version()   { print_help | sed '2,$d' ;} # print only second line
 print_noselect()  { color_print "Nothing was selected. Exiting..." ;}
 print_noconfirm() { color_print "\nDefault option chosen due to option '-y'.\n" ;}
 watching_prompt() {
@@ -194,12 +194,12 @@ get_list()        { #{{{
       # LINES and COLUMNS vars for long titles
       # see https://github.com/z411/trackma/commit/020c0a25637f7368e6c075bcbe67cd938a51b818
       tlist=$(echo -e "filter $query\nlist\nexit" | LINES=25 COLUMNS=250 trackma -a "$account" - | \
-              sed -n '/[[:space:]].1/,${p;/results/q}' | head -n -1)
+              sed -n '/[[:space:]].1/,${p;/results/q}' | sed '$d')
     ;;
     "watching")
       # the above works with query=watching, but that method is hacky
       # using official way for best compatability
-      tlist=$(LINES=25 COLUMNS=250 trackma -a "$account" list | head -n -2 | tail -n +2)
+      tlist=$(LINES=25 COLUMNS=250 trackma -a "$account" list | sed '$d' | sed '1d;$d')
     ;;
   esac
   if [[ "$tlist" == "" ]]; then
@@ -778,7 +778,7 @@ change_providers() { #{{{
 
   # used to be, for anime dl
   color_print "Available providers are: "
-  echo "$(anime dl --help | grep 'provider' | head -1)"
+  # echo "$(anime dl --help | grep 'provider' | sed '2,$d')"
   color_prompt "Try another provider? [N / provider name]: "
   read ans_provider
   case "$ans_provider" in
@@ -949,8 +949,8 @@ check_for_updates() {
   local thisv gitv
   # using sed to make the numbers integers
   thisv=$(print_version | awk '{print $2}' | sed 's/\.//g')
-  # it is #3 here because ## are not removed
-  gitv=$(grep 'Version' "$git_file" | head -n1 | awk '{print $3}' | sed 's/\.//g')
+  # it is #3 here because double # are not removed
+  gitv=$(grep 'Version' "$git_file" | sed '2,$d' | awk '{print $3}' | sed 's/\.//g')
   if [[ "$gitv" -gt "$thisv" ]]; then
     printf "$_cr%s$_cd\n" "adl is outdated! Update using 'adl -u', or however you can."
   fi
