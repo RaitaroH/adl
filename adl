@@ -677,7 +677,7 @@ watch() { #{{{
         done
         trackma -a "$account" send
         unset -v ans_modify
-        color_prompt "\nWhat else? [N/m/0-9/l/a/i/r/c/u/s]: "
+        color_prompt "\nWhat else? [N/m/0-9/l/a/i/r/c/u/s/q]: "
         read ans_episode
         ;;
       [sS]*)
