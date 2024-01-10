@@ -242,11 +242,15 @@ get_entry() {
 adl_covers() {
   # for a python way, check the homepage
   local url
+  # in case anime has " in the name, it will break the curl
+  t=$(echo "$1" | sed "s/\"/'/g")
   url=$(curl "https://graphql.anilist.co" \
     --silent -X POST -H 'content-type: application/json' -H 'accept: application/json' \
-    --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$1\"}}")
+    --data "{\"query\":\"query (\$id: Int, \$search: String) {Media (id: \$id, search: \$search, type: ANIME) {id coverImage {large}}}\", \"variables\": {\"search\": \"$t\"}}")
   url=$(echo "$url" | sed -n 's/\\//g; s/.*"\(http.*\)".*/\1/p')
-  wget --quiet "$url" -O "$COVERS_DIR/$1.png"
+  # now we replace " back because we check for file existence before download
+  t=$(echo "$1" | sed "s/'/\"/g")
+  wget --quiet "$url" -O "$COVERS_DIR/$t.png"
 }
 UEBERZUG_FIFO="$(mktemp --dry-run --suffix "fzf-$$-ueberzug")"
 declare -r -x UEBERZUG_FIFO
