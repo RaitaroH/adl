@@ -17,7 +17,7 @@
 ##   -q, --query       By default trackma will list watching. Use \033[0;36m$adl -q "query"\033[0m to change the list.
 ##                     Available queries: watching, completed, rewatching, paused, dropped, plantowatch;
 ##   -u, --update      Update this script from github master;
-##   -c, --cover       Show cover/artwork image during anime selction, using ueberzug; use at your own risk;
+##   -c, --cover       Show cover/artwork image during anime selction, using ueberzugpp; use at your own risk;
 ##   -g, --debug       Enter light debug mode; Use \033[0;36m$set -x adl -g ...\033[0m for full debug mode;
 ##   -h, --help        Display help and exit;
 ##   -v, --version     Display version and exit.
@@ -124,7 +124,7 @@ check_player() { #{{{
 check_dep() { #{{{
   if ! [ -x "$(command -v "$1")" ]; then
     echo -e "\033[1;31mError:\033[0m '$1' is not installed." >&2
-    echo -e "Dependencies are: ${dependencies[@]} [frece ueberzug curl wget] \n" >&2
+    echo -e "Dependencies are: ${dependencies[@]} [frece ueberzugpp curl wget] \n" >&2
     print_options
     exit 1
   fi
@@ -140,8 +140,8 @@ declare -a dependencies=("animdl" "trackma" "fzf" "find" "perl" "sed" "awk" "gre
 #}}}
 check_covers() { #{{{
   debug_print "check_covers()"
-  if ! [ -x "$(command -v ueberzug)" ]; then
-    echo "Error: Cannot display covers due to missing package 'ueberzug'." >&2
+  if ! [ -x "$(command -v ueberzugpp)" ]; then
+    echo "Error: Cannot display covers due to missing package 'ueberzugpp'." >&2
     print_options
     exit 1
   fi
@@ -231,14 +231,15 @@ get_entry() {
   # now get the line number from selection
   line_nr=$(echo "$fzf_selection" | awk '{print $1}')
   # find the entry from tlist that has that number so we have the expected |||| format
+  debug_print_vars "fzf_selection" "line_nr"
   entry="$(echo "$tlist" | sed -n "$line_nr p" | process_list)"
   present=""
-  debug_print_vars "fzf_selection" "line_nr" "entry"
+  debug_print_vars "entry"
 }
 # }}}
 
-# Covers functions using ueberzug {{{
-# https://github.com/seebye/ueberzug/blob/master/examples/fzfimg.sh
+# Covers functions using ueberzugpp {{{
+# https://github.com/jstkdng/ueberzugpp/blob/master/scripts/fzfub
 adl_covers() {
   # for a python way, check the homepage
   local url
@@ -252,15 +253,20 @@ adl_covers() {
   t=$(echo "$1" | sed "s/'/\"/g")
   wget --quiet "$url" -O "$COVERS_DIR/$t.png"
 }
-UEBERZUG_FIFO="$(mktemp --dry-run --suffix "fzf-$$-ueberzug")"
-declare -r -x UEBERZUG_FIFO
+
 start_ueberzug() {
-  mkfifo "${UEBERZUG_FIFO}"
-  <"${UEBERZUG_FIFO}" \
-      ueberzug layer --parser bash --silent &
-  # prevent EOF
-  3>"${UEBERZUG_FIFO}" \
-      exec
+  UB_PID=0
+  UB_SOCKET=""
+
+  case "$(uname -a)" in
+      *Darwin*) UEBERZUG_TMP_DIR="$TMPDIR" ;;
+      *) UEBERZUG_TMP_DIR="/tmp" ;;
+  esac
+
+  UB_PID_FILE="$UEBERZUG_TMP_DIR/.$(uuidgen)"
+  ueberzugpp layer --no-stdin --silent --use-escape-codes --pid-file "$UB_PID_FILE" > /dev/null 2>&1
+  UB_PID="$(cat "$UB_PID_FILE")"
+  export UB_SOCKET="$UEBERZUG_TMP_DIR"/ueberzugpp-"$UB_PID".socket
 }
 draw_preview() {
   local img
@@ -268,13 +274,10 @@ draw_preview() {
   img=$(echo "${@}" | sed 's/^[^ ]* //')
   [ ! -s "$COVERS_DIR/$img.png" ] && adl_covers "$img"
 
-  >"${UEBERZUG_FIFO}" declare -A -p cmd=( \
-      [action]=add [identifier]="preview" \
-      [x]="2" [y]="1" \
-      [width]="$((COLUMNS-2))" [height]="$((LINES-3))" \
-      [scaler]=fit_contain [scaling_position_x]=0.5 [scaling_position_y]=0.5 \
-      [path]="$COVERS_DIR/$img.png")
-      # add [synchronously_draw]=True if you want to see each change
+  ueberzugpp cmd -s "$UB_SOCKET" -a add -i fzfpreview -x "2" -y "1" \
+    --max-width "$((COLUMNS - 2))" --max-height "$((LINES - 3))" \
+    -f "$COVERS_DIR/$img.png" > /dev/null 2>&1
+
 }
 set_fzf_covers() {
   debug_print "set_fzf_covers()"
@@ -293,8 +296,8 @@ set_fzf_covers() {
       # disabled multi-select with +m as the codebase changed. Still works but you get another prompt
       fzf --ansi --reverse --cycle +m --prompt "  Index    Count    Score   Title: "\
           --preview "draw_preview {}" --preview-window "left,17%"
-      pkill ueberzug
-      rm "${UEBERZUG_FIFO}"
+      # pkill $UB_PID
+      ueberzugpp cmd -s "$UB_SOCKET" -a exit 2> /dev/null
     }
   else
     fzf_select() {
