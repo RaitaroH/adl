@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Version:\033[0;35m 3.2.9 \033[0m
+## Version:\033[0;35m 3.3.0 \033[0m
 ## Wrapper for anime-downloader. Allows using watchlist given by trackma for a better anime watching cli experience.
 ## Homepage:\033[0;34m https://github.com/RaitaroH/adl \033[0m
 ## Usage:\033[0;36m $adl [Option...] [Argument...] \033[0m
@@ -85,7 +85,7 @@ clean_exit() {
 
 # An array of anime that end with a fullstop/period/dot
 # required for trackma updating
-declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu" "ef: a tale of memories" "ef: a tale of melodies" "Watashi no Oshi wa Akuyaku Reijou" "Keikenzumi na Kimi to, Keiken Zero na Ore ga, Otsukiai suru Hanashi" "Isekai de Mofumofu Nadenade Suru Tame ni Ganbattemasu")
+declare -a exceptions=("Bakuman" "Araburu Kisetsu no Otome-domo yo" "Doukyonin wa Hiza" "Tokidoki" "Atama no Ue" "Kobato" "Beelzebub-jou no Okinimesu mama" "Dragon, Ie wo Kau" "Hige wo Soru. Soshite Joshikousei wo Hirou" "Komi-san wa, Komyushou desu" "ef: a tale of memories" "ef: a tale of melodies" "Watashi no Oshi wa Akuyaku Reijou" "Keikenzumi na Kimi to, Keiken Zero na Ore ga, Otsukiai suru Hanashi" "Isekai de Mofumofu Nadenade Suru Tame ni Ganbattemasu" "Zenshuu" "Kimi no Na wa" "Watashi no Oshi wa Akuyaku Reijou" "Tsuma, Shougakusei ni Naru" "Yahari Ore no Seishun Love Come wa Machigatteiru" "Yahari Ore no Seishun Love Come wa Machigatteiru.: Kochira to Shite mo Karera Kanojora no Yukusue ni Sachi Ookaran Koto wo Negawazaru wo Enai" "Ano Hi Mita Hana no Namae wo Bokutachi wa Mada Shiranai" "Mahoutsukai ni Narenakatta Onnanoko no Hanashi" "Kimi wa Meido-sama" "GANGSTA" "Isekai de Mofumofu Nadenade Suru Tame ni Ganbattemasu" "Dakara Boku wa, H ga Dekinai" "Tantei wa mou, Shindeiru" "Rikei ga Koi ni Ochita no de Shoumei shitemita" "Shachiku-san wa Youjo Yuurei ni Iyasaretai" "Asagao to Kase-san" "Class no Daikirai na Joshi to Kekkon Suru Koto ni Natta" "Nihon e Youkoso Elf-san")
 check_exceptions() {
   debug_print "check_exceptions()"
   # test if an anime title has a period at the end or not. If yes add one
