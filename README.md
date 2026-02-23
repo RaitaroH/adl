@@ -9,6 +9,8 @@
     This is wrapper for <a href="https://github.com/justfoolingaround/animdl">animdl</a> +
     <a href="https://github.com/z411/trackma">trackma</a>.<br>
     The goal? Type adl, hit enter, choose show, watch show, update episode number with as little input as possible.
+    <br>
+    <b>NOTE: adl is in a fairly complete state and will not receive any more updates. Its dependencies may have breaking changes for adl.</b>
   </p>
 
   ![](./images/terminal.svg)
